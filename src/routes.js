@@ -11,13 +11,19 @@ import Errors from "./views/Errors";
 import ComponentsOverview from "./views/ComponentsOverview";
 import Tables from "./views/Tables";
 import BlogPosts from "./views/BlogPosts";
+import Home from "./views/Home";
 
 export default [
   {
     path: "/",
     exact: true,
     layout: DefaultLayout,
-    component: () => <Redirect to="/blog-overview" />
+    component: () => <Redirect to="/home" />
+  },
+  {
+    path: "/home",
+    layout: DefaultLayout,
+    component: Home
   },
   {
     path: "/blog-overview",
