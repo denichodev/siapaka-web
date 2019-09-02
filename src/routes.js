@@ -12,6 +12,7 @@ import ComponentsOverview from "./views/ComponentsOverview";
 import Tables from "./views/Tables";
 import BlogPosts from "./views/BlogPosts";
 import Home from "./views/Home";
+import Login from "./views/Login";
 
 export default [
   {
@@ -19,6 +20,12 @@ export default [
     exact: true,
     layout: DefaultLayout,
     component: () => <Redirect to="/home" />
+  },
+  {
+    path: "/login",
+    exact: true,
+    layout: () => null,
+    component: Login,
   },
   {
     path: "/home",
