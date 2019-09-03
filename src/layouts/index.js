@@ -1,3 +1,4 @@
 import DefaultLayout from "./Default";
+import ContainerOnly from "./ContainerOnly";
 
-export { DefaultLayout };
+export { DefaultLayout, ContainerOnly };

@@ -2,7 +2,7 @@ import React from "react";
 import { Redirect } from "react-router-dom";
 
 // Layout Types
-import { DefaultLayout } from "./layouts";
+import { DefaultLayout, ContainerOnly } from "./layouts";
 
 // Route Views
 import BlogOverview from "./views/BlogOverview";
@@ -24,8 +24,8 @@ export default [
   {
     path: "/login",
     exact: true,
-    layout: () => null,
-    component: Login,
+    layout: ContainerOnly,
+    component: Login
   },
   {
     path: "/home",
