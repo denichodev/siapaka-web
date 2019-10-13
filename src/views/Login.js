@@ -39,7 +39,7 @@ const Login = (props) => {
     userContext
       .login(email, password)
       .then(res => {
-        userContext.setAuthToken(res.data.access_token)
+        userContext.setAuthToken(res.data.success.token)
       })
       .catch(err => {
         if (err === 401) {

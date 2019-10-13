@@ -12,6 +12,7 @@ import ComponentsOverview from "./views/ComponentsOverview";
 import Tables from "./views/Tables";
 import BlogPosts from "./views/BlogPosts";
 import Home from "./views/Home";
+import DoctorList from "./views/DoctorList";
 import Login from "./views/Login";
 
 export default [
@@ -31,6 +32,11 @@ export default [
     path: "/home",
     layout: DefaultLayout,
     component: Home
+  },
+  {
+    path: "/dokter",
+    layout: DefaultLayout,
+    component: DoctorList,
   },
   {
     path: "/blog-overview",

@@ -1,62 +1,67 @@
-import React from "react";
-import PropTypes from "prop-types";
-import classNames from "classnames";
-import { Col } from "shards-react";
+import React from 'react';
+import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import { Col } from 'shards-react';
+import SidebarContext from 'contexts/SidebarContext';
 
-import SidebarMainNavbar from "./SidebarMainNavbar";
-import SidebarSearch from "./SidebarSearch";
-import SidebarNavItems from "./SidebarNavItems";
+import SidebarMainNavbar from './SidebarMainNavbar';
+import SidebarSearch from './SidebarSearch';
+import SidebarNavItems from './SidebarNavItems';
 
-class MainSidebar extends React.Component {
-  constructor(props) {
-    super(props);
+const MainSidebar = props => {
+  const sidebarState = React.useContext(SidebarContext);
 
-    this.state = {
-      menuVisible: false,
-      // sidebarNavItems: Store.getSidebarItems()
-    };
+  const classes = classNames(
+    'main-sidebar',
+    'px-0',
+    'col-12',
+    sidebarState.visible && 'open'
+  );
 
-    this.onChange = this.onChange.bind(this);
-  }
+  return (
+    <Col tag="aside" className={classes} lg={{ size: 2 }} md={{ size: 3 }}>
+      <SidebarMainNavbar hideLogoText={props.hideLogoText} />
+      <SidebarSearch />
+      <SidebarNavItems />
+    </Col>
+  );
+};
 
-  componentWillMount() {
-    // Store.addChangeListener(this.onChange);
-  }
+// class MainSidebar extends React.Component {
+//   constructor(props) {
+//     super(props);
 
-  componentWillUnmount() {
-    // Store.removeChangeListener(this.onChange);
-  }
+//     this.state = {
+//       menuVisible: false
+//     };
+//   }
 
-  onChange() {
-    this.setState({
-      ...this.state,
-      // menuVisible: Store.getMenuState(),
-      // sidebarNavItems: Store.getSidebarItems()
-    });
-  }
+//   toggleSidebar = () => {
+//     this.setState(prevState => ({
+//       menuVisible: !prevState.menuVisible
+//     }));
+//   };
 
-  render() {
-    const classes = classNames(
-      "main-sidebar",
-      "px-0",
-      "col-12",
-      this.state.menuVisible && "open"
-    );
+//   render() {
+//     const classes = classNames(
+//       'main-sidebar',
+//       'px-0',
+//       'col-12',
+//       this.state.menuVisible && 'open'
+//     );
 
-    return (
-      <Col
-        tag="aside"
-        className={classes}
-        lg={{ size: 2 }}
-        md={{ size: 3 }}
-      >
-        <SidebarMainNavbar hideLogoText={this.props.hideLogoText} />
-        <SidebarSearch />
-        <SidebarNavItems />
-      </Col>
-    );
-  }
-}
+//     return (
+//       <Col tag="aside" className={classes} lg={{ size: 2 }} md={{ size: 3 }}>
+//         <SidebarMainNavbar
+//           toggleSidebar={this.toggleSidebar}
+//           hideLogoText={this.props.hideLogoText}
+//         />
+//         <SidebarSearch />
+//         <SidebarNavItems />
+//       </Col>
+//     );
+//   }
+// }
 
 MainSidebar.propTypes = {
   /**
