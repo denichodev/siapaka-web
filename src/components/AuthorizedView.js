@@ -2,8 +2,22 @@ import React from "react";
 import UserContext from "contexts/UserContext";
 
 const permissions = {
-  ADM: ["view-doctor", "edit-doctor", "add-doctor", "delete-doctor"],
-  KG: ["view-doctor"]
+  ADM: [
+    "read-doctor",
+    "edit-doctor",
+    "add-doctor",
+    "delete-doctor",
+    "read-supplier",
+    "edit-supplier",
+    "add-supplier",
+    "delete-supplier",
+    "read-staff",
+    "edit-staff",
+    "add-staff",
+    "delete-staff"
+  ],
+  KG: ["read-doctor", "read-supplier"],
+  KAS: ["read-doctor", "read-supplier"]
 };
 
 const AuthorizedView = props => {

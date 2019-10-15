@@ -5,7 +5,7 @@ import useForm from "react-hook-form";
 import AuthError from "./AuthError";
 
 import { VAlign } from "styles/commons";
-import DoctorResource from "resources/doctor";
+import SupplierResource from "resources/supplier";
 import { useHistory } from "react-router-dom";
 import {
   Container,
@@ -26,15 +26,15 @@ import {
 import PageTitle from "../components/common/PageTitle";
 import AuthorizedView from "../components/AuthorizedView";
 
-const ListActions = ({ doctor }) => {
-  const del = useFetcher(DoctorResource.deleteShape());
+const ListActions = ({ supplier }) => {
+  const del = useFetcher(SupplierResource.deleteShape());
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const handleDelete = () => {
     if (!confirmDelete) {
       setConfirmDelete(true);
     } else {
-      del(undefined, { id: doctor.id });
+      del(undefined, { id: supplier.id });
     }
   };
 
@@ -44,14 +44,14 @@ const ListActions = ({ doctor }) => {
     }
   };
 
-  if (!doctor) {
+  if (!supplier) {
     return null;
   }
 
   return (
     <>
-      <AuthorizedView permissionType="edit-doctor">
-        <Link to={`/dokter/edit/${doctor.id}`}>
+      <AuthorizedView permissionType="edit-supplier">
+        <Link to={`/supplier/edit/${supplier.id}`}>
           <Button
             type="submit"
             size="sm"
@@ -64,7 +64,7 @@ const ListActions = ({ doctor }) => {
         </Link>
       </AuthorizedView>
 
-      <AuthorizedView permissionType="delete-doctor">
+      <AuthorizedView permissionType="delete-supplier">
         <Button
           type="submit"
           size="sm"
@@ -80,9 +80,9 @@ const ListActions = ({ doctor }) => {
   );
 };
 
-const DoctorList = () => {
+const SupplierList = () => {
   const [query, setQuery] = React.useState("");
-  const doctorList = useResource(DoctorResource.listShape(), {});
+  const supplierList = useResource(SupplierResource.listShape(), {});
 
   const onSearch = e => {
     setQuery(e.target.value);
@@ -92,8 +92,8 @@ const DoctorList = () => {
     <>
       <Row noGutters className="page-header py-4">
         <PageTitle
-          title="Dokter"
-          subtitle="Daftar Dokter"
+          title="Supplier"
+          subtitle="Daftar Supplier"
           className="text-sm-left"
         />
       </Row>
@@ -115,10 +115,10 @@ const DoctorList = () => {
                 </Col>
 
                 <Col lg={{ offset: 6, size: 2 }}>
-                  <AuthorizedView permissionType="add-doctor">
-                    <Link to="/dokter/add">
+                  <AuthorizedView permissionType="add-supplier">
+                    <Link to="/supplier/add">
                       <Button block size="sm" theme="primary">
-                        Tambah Dokter
+                        Tambah Supplier
                       </Button>
                     </Link>
                   </AuthorizedView>
@@ -144,17 +144,19 @@ const DoctorList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {doctorList
-                    .filter(doctor => doctor.name.toLowerCase().includes(query))
-                    .map(doctor => (
-                      <tr key={doctor.id}>
-                        <td>{doctor.id}</td>
-                        <td>{doctor.name}</td>
-                        <td>{doctor.address}</td>
-                        <td>{doctor.phoneNo}</td>
+                  {supplierList
+                    .filter(supplier =>
+                      supplier.name.toLowerCase().includes(query)
+                    )
+                    .map(supplier => (
+                      <tr key={supplier.id}>
+                        <td>{supplier.id}</td>
+                        <td>{supplier.name}</td>
+                        <td>{supplier.address}</td>
+                        <td>{supplier.phoneNo}</td>
                         <React.Suspense>
                           <td className="d-flex justify-content-center">
-                            <ListActions doctor={doctor} />
+                            <ListActions supplier={supplier} />
                           </td>
                         </React.Suspense>
                       </tr>
@@ -169,25 +171,28 @@ const DoctorList = () => {
   );
 };
 
-const DoctorAdd = props => {
-  const createDoctor = useFetcher(DoctorResource.createShape());
+const SupplierAdd = props => {
+  const createSupplier = useFetcher(SupplierResource.createShape());
   const history = useHistory();
   const { handleSubmit, register, errors } = useForm();
-  const invalidateDoctorList = useInvalidator(DoctorResource.listShape(), {});
+  const invalidateSupplierList = useInvalidator(
+    SupplierResource.listShape(),
+    {}
+  );
 
   const onSubmit = (values, e) => {
-    createDoctor(values, {});
-    invalidateDoctorList({});
+    createSupplier(values, {});
+    invalidateSupplierList({});
 
-    history.push("/dokter");
+    history.push("/supplier");
   };
 
   return (
-    <AuthorizedView permissionType="add-doctor" fallback={<AuthError />}>
+    <AuthorizedView permissionType="add-supplier" fallback={<AuthError />}>
       <Row noGutters className="page-header py-4">
         <PageTitle
-          title="Dokter"
-          subtitle="Tambah Dokter"
+          title="Supplier"
+          subtitle="Tambah Supplier"
           className="text-sm-left"
         />
       </Row>
@@ -198,7 +203,7 @@ const DoctorAdd = props => {
               <Row>
                 <Col xs="6" sm="8" lg="10">
                   <VAlign>
-                    <h6 className="m-0">Tambah Dokter</h6>
+                    <h6 className="m-0">Tambah Supplier</h6>
                   </VAlign>
                 </Col>
               </Row>
@@ -273,7 +278,7 @@ const DoctorAdd = props => {
                             {errors.address && errors.address.message}
                           </FormFeedback>
                         </FormGroup>
-                        <Button type="submit">Tambah Dokter Baru</Button>
+                        <Button type="submit">Tambah Supplier Baru</Button>
                       </Form>
                     </Col>
                   </Row>
@@ -287,34 +292,34 @@ const DoctorAdd = props => {
   );
 };
 
-const DoctorEdit = props => {
-  const doctor = useResource(DoctorResource.detailShape(), {
-    id: props.match.params.doctorId
+const SupplierEdit = props => {
+  const supplier = useResource(SupplierResource.detailShape(), {
+    id: props.match.params.supplierId
   });
-  const updateDoctor = useFetcher(DoctorResource.updateShape());
+  const updateSupplier = useFetcher(SupplierResource.updateShape());
 
   const { handleSubmit, register, errors } = useForm({
     defaultValues: {
-      name: doctor.name,
-      phoneNo: doctor.phoneNo,
-      address: doctor.address
+      name: supplier.name,
+      phoneNo: supplier.phoneNo,
+      address: supplier.address
     }
   });
-  // const invalidateDoctorList = useInvalidator(DoctorResource.listShape(), {});
+  // const invalidateSupplierList = useInvalidator(SupplierResource.listShape(), {});
 
   const onSubmit = (values, e) => {
-    updateDoctor(values, { id: props.match.params.doctorId });
-    // invalidateDoctorList({});
+    updateSupplier(values, { id: props.match.params.supplierId });
+    // invalidateSupplierList({});
 
-    props.history.push("/dokter");
+    props.history.push("/supplier");
   };
 
   return (
-    <AuthorizedView permissionType="edit-doctor" fallback={<AuthError />}>
+    <AuthorizedView permissionType="edit-supplier" fallback={<AuthError />}>
       <Row noGutters className="page-header py-4">
         <PageTitle
-          title="Dokter"
-          subtitle="Ubah Dokter"
+          title="Supplier"
+          subtitle="Ubah Supplier"
           className="text-sm-left"
         />
       </Row>
@@ -325,7 +330,7 @@ const DoctorEdit = props => {
               <Row>
                 <Col xs="6" sm="8" lg="10">
                   <VAlign>
-                    <h6 className="m-0">Ubah Dokter</h6>
+                    <h6 className="m-0">Ubah Supplier</h6>
                   </VAlign>
                 </Col>
               </Row>
@@ -400,7 +405,7 @@ const DoctorEdit = props => {
                             {errors.address && errors.address.message}
                           </FormFeedback>
                         </FormGroup>
-                        <Button type="submit">Ubah Dokter</Button>
+                        <Button type="submit">Ubah Supplier</Button>
                       </Form>
                     </Col>
                   </Row>
@@ -414,16 +419,16 @@ const DoctorEdit = props => {
   );
 };
 
-const Doctor = () => {
+const Supplier = () => {
   return (
-    <AuthorizedView permissionType="read-doctor" fallback={<AuthError />}>
+    <AuthorizedView permissionType="read-supplier" fallback={<AuthError />}>
       <Container fluid className="main-content-container px-4">
-        <Route exact path="/dokter" component={DoctorList} />
-        <Route path="/dokter/add" component={DoctorAdd} />
-        <Route path="/dokter/edit/:doctorId" component={DoctorEdit} />
+        <Route exact path="/supplier" component={SupplierList} />
+        <Route path="/supplier/add" component={SupplierAdd} />
+        <Route path="/supplier/edit/:supplierId" component={SupplierEdit} />
       </Container>
     </AuthorizedView>
   );
 };
 
-export default Doctor;
+export default Supplier;

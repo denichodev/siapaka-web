@@ -13,6 +13,8 @@ import Tables from "./views/Tables";
 import BlogPosts from "./views/BlogPosts";
 import Home from "./views/Home";
 import Doctor from "./views/Doctor";
+import Staff from "./views/Staff";
+import Supplier from "./views/Supplier";
 import Login from "./views/Login";
 
 export default [
@@ -32,6 +34,16 @@ export default [
     path: "/home",
     layout: DefaultLayout,
     component: Home
+  },
+  {
+    path: "/karyawan",
+    layout: DefaultLayout,
+    component: Staff
+  },
+  {
+    path: "/supplier",
+    layout: DefaultLayout,
+    component: Supplier
   },
   {
     path: "/dokter",

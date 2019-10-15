@@ -1,7 +1,7 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import SidebarContext from 'contexts/SidebarContext';
-import { Navbar, NavbarBrand } from 'shards-react';
+import React from "react";
+import PropTypes from "prop-types";
+import SidebarContext from "contexts/SidebarContext";
+import { Navbar, NavbarBrand } from "shards-react";
 
 const SidebarMainNavbar = props => {
   const sidebarState = React.useContext(SidebarContext);
@@ -15,18 +15,18 @@ const SidebarMainNavbar = props => {
         <NavbarBrand
           className="w-100 mr-0"
           href="#"
-          style={{ lineHeight: '25px' }}
+          style={{ lineHeight: "25px" }}
         >
           <div className="d-table m-auto">
             <img
               id="main-logo"
               className="d-inline-block align-top mr-1"
-              style={{ maxWidth: '25px' }}
-              src={require('../../../images/shards-dashboards-logo.svg')}
-              alt="Shards Dashboard"
+              style={{ maxWidth: "25px" }}
+              src={require("../../../images/shards-dashboards-logo.svg")}
+              alt="SIAPAKA logo"
             />
             {!props.hideLogoText && (
-              <span className="d-none d-md-inline ml-1">Shards Dashboard</span>
+              <span className="d-none d-md-inline ml-1">SIAPAKA</span>
             )}
           </div>
         </NavbarBrand>
