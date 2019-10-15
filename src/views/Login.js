@@ -7,13 +7,13 @@ import {
   FormInput,
   Button,
   Row,
-  Col
+  Col,
+  FormFeedback
 } from "shards-react";
+import useForm from "react-hook-form";
 import styled from "styled-components";
-import {withRouter} from 'react-router-dom';
+import { withRouter } from "react-router-dom";
 import UserContext from "contexts/UserContext";
-
-import { useTextInput } from "hooks";
 
 const LoginWrapper = styled.div`
   display: flex;
@@ -26,24 +26,20 @@ const LoginCard = styled(Card)`
   width: 320px;
 `;
 
-const Login = (props) => {
-  const [email, setEmail] = useTextInput();
-  const [password, setPassword] = useTextInput();
+const Login = props => {
+  const { handleSubmit, register, errors } = useForm();
+  const [networkError, setNetworkError] = React.useState("");
 
   const userContext = React.useContext(UserContext);
-  const handleLogin = (e) => {
-    e.preventDefault();
-
-    console.log('props', props);
-
+  const handleLogin = values => {
     userContext
-      .login(email, password)
+      .login(values.email, values.password)
       .then(res => {
-        userContext.setAuthToken(res.data.success.token)
+        userContext.setAuthToken(res.data.success.token);
       })
       .catch(err => {
-        if (err === 401) {
-          console.log('salah')
+        if (err.response.status === 401) {
+          setNetworkError("Email atau password salah.");
         }
       });
   };
@@ -52,31 +48,45 @@ const Login = (props) => {
     <LoginWrapper>
       <LoginCard>
         <CardBody>
-          <Form onSubmit={handleLogin}>
+          <Form onSubmit={handleSubmit(handleLogin)}>
             <FormGroup>
               <FormInput
-                value={email}
-                id="#email"
-                placeholder="Email"
-                onChange={setEmail}
+                name="email"
+                id="email"
+                placeholder="example@gmail.com"
+                invalid={!!errors.email || networkError.length}
+                innerRef={register({
+                  required: "Wajib diisi",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
+                    message: "Email tidak valid"
+                  }
+                })}
               />
             </FormGroup>
             <FormGroup>
               <FormInput
-                value={password}
                 type="password"
-                id="#password"
+                name="password"
+                id="password"
                 placeholder="Password"
-                onChange={setPassword}
+                invalid={!!errors.password || networkError.length}
+                innerRef={register({
+                  required: "Wajib diisi"
+                })}
               />
+
+              <FormFeedback invalid={networkError && networkError.length}>
+                {networkError}
+              </FormFeedback>
             </FormGroup>
-            <Row>
-              <Col lg={{ size: 4, offset: 8 }}>
-                <Button type="submit">
-                  Masuk
-                </Button>
-              </Col>
-            </Row>
+            <FormGroup>
+              <Row>
+                <Col lg={{ size: 4, offset: 8 }}>
+                  <Button type="submit">Masuk</Button>
+                </Col>
+              </Row>
+            </FormGroup>
           </Form>
         </CardBody>
       </LoginCard>
