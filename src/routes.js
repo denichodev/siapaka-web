@@ -13,6 +13,7 @@ import Tables from "./views/Tables";
 import BlogPosts from "./views/BlogPosts";
 import Home from "./views/Home";
 import Doctor from "./views/Doctor";
+import Medicine from "./views/Medicine";
 import Staff from "./views/Staff";
 import Supplier from "./views/Supplier";
 import Login from "./views/Login";
@@ -49,6 +50,11 @@ export default [
     path: "/dokter",
     layout: DefaultLayout,
     component: Doctor
+  },
+  {
+    path: "/obat",
+    layout: DefaultLayout,
+    component: Medicine
   },
   {
     path: "/blog-overview",
