@@ -6,6 +6,8 @@ import AuthError from "./AuthError";
 
 import { VAlign } from "styles/commons";
 import MedicineResource from "resources/medicine";
+import MedsTypeResource from "resources/medsType";
+import MedsCategoryResource from "resources/medsCategory";
 import { useHistory } from "react-router-dom";
 import {
   Container,
@@ -20,7 +22,8 @@ import {
   ListGroupItem,
   ListGroup,
   Form,
-  FormFeedback
+  FormFeedback,
+  FormSelect
 } from "shards-react";
 
 import PageTitle from "../components/common/PageTitle";
@@ -189,6 +192,8 @@ const MedicineList = () => {
 
 const MedicineAdd = props => {
   const createMedicine = useFetcher(MedicineResource.createShape());
+  const medsTypeList = useResource(MedsTypeResource.listShape(), {});
+  const medsCategoryList = useResource(MedsCategoryResource.listShape(), {});
   const history = useHistory();
   const { handleSubmit, register, errors } = useForm();
   const invalidateMedicineList = useInvalidator(
@@ -231,7 +236,7 @@ const MedicineAdd = props => {
                     <Col>
                       <Form onSubmit={handleSubmit(onSubmit)}>
                         <Row form>
-                          <Col md="6" className="form-group">
+                          <Col md="12" className="form-group">
                             <label htmlFor="feName">Nama</label>
                             <FormInput
                               id="feName"
@@ -250,50 +255,133 @@ const MedicineAdd = props => {
                               {errors.name && errors.name.message}
                             </FormFeedback>
                           </Col>
-                          <Col md="6">
-                            <label htmlFor="fePhoneNo">No. Handphone</label>
+                        </Row>
+
+                        <Row form>
+                          <Col md="6" className="form-group">
+                            <label htmlFor="fePrice">Harga</label>
                             <FormInput
-                              name="phoneNo"
-                              id="fePhoneNo"
-                              placeholder="08123456789"
-                              invalid={!!errors.phoneNo}
+                              id="fePrice"
+                              name="price"
+                              placeholder="Harga"
+                              invalid={!!errors.price}
+                              innerRef={register({
+                                required: "Wajib diisi",
+                                pattern: {
+                                  value: /^\d+$/,
+                                  message: "Hanya angka"
+                                }
+                              })}
+                            />
+                            <FormFeedback invalid={!!errors.price}>
+                              {errors.price && errors.price.message}
+                            </FormFeedback>
+                          </Col>
+                          <Col md="6" className="form-group">
+                            <label htmlFor="feMedsCategory">Jenis</label>
+                            <FormSelect
+                              id="feMedsCategory"
+                              name="medsCategoryId"
+                              innerRef={register({
+                                required: "Wajib dipilih"
+                              })}
+                            >
+                              {medsCategoryList.map(medsCategory => (
+                                <option
+                                  value={medsCategory.id}
+                                  key={medsCategory.id}
+                                >
+                                  {medsCategory.name}
+                                </option>
+                              ))}
+                            </FormSelect>
+                            <FormFeedback invalid={!!errors.medsCategoryId}>
+                              {errors.medsCategoryId &&
+                                errors.medsCategoryId.message}
+                            </FormFeedback>
+                          </Col>
+                        </Row>
+
+                        <Row form>
+                          <Col md="4" className="form-group">
+                            <label htmlFor="feCurrStock">Stok</label>
+                            <FormInput
+                              id="feCurrStock"
+                              name="currStock"
+                              placeholder="Stok"
+                              invalid={!!errors.currStock}
+                              innerRef={register({
+                                required: "Wajib diisi",
+                                pattern: {
+                                  value: /^\d+$/,
+                                  message: "Hanya angka"
+                                }
+                              })}
+                            />
+                            <FormFeedback invalid={!!errors.currStock}>
+                              {errors.currStock && errors.currStock.message}
+                            </FormFeedback>
+                          </Col>
+                          <Col md="4" className="form-group">
+                            <label htmlFor="feMedsType">Satuan</label>
+                            <FormSelect
+                              id="feMedsType"
+                              name="medsTypeId"
+                              innerRef={register({
+                                required: "Wajib dipilih"
+                              })}
+                            >
+                              {medsTypeList.map(medsType => (
+                                <option value={medsType.id} key={medsType.id}>
+                                  {medsType.name}
+                                </option>
+                              ))}
+                            </FormSelect>
+                            <FormFeedback invalid={!!errors.medsTypeId}>
+                              {errors.medsTypeId && errors.medsTypeId.message}
+                            </FormFeedback>
+                          </Col>
+                          <Col md="4" className="form-group">
+                            <label htmlFor="feMinStock">Stok Minimal</label>
+                            <FormInput
+                              id="feMinStock"
+                              name="minStock"
+                              placeholder="Stok Minimal"
+                              invalid={!!errors.minStock}
+                              innerRef={register({
+                                required: "Wajib diisi",
+                                pattern: {
+                                  value: /^\d+$/,
+                                  message: "Hanya angka"
+                                }
+                              })}
+                            />
+                            <FormFeedback invalid={!!errors.minStock}>
+                              {errors.minStock && errors.minStock.message}
+                            </FormFeedback>
+                          </Col>
+                        </Row>
+                        <Row form>
+                          <Col md="12" className="form-group">
+                            <label htmlFor="feFactory">Pabrik</label>
+                            <FormInput
+                              id="feFactory"
+                              name="factory"
+                              placeholder="Pabrik"
+                              invalid={!!errors.factory}
                               innerRef={register({
                                 required: "Wajib diisi",
                                 minLength: {
                                   value: 2,
                                   message: "Minimal 2 karakter"
-                                },
-                                pattern: {
-                                  value: /^[0-9-]*$/,
-                                  message: "Hanya angka dan karakter: -"
                                 }
                               })}
                             />
-                            <FormFeedback invalid={!!errors.phoneNo}>
-                              {errors.phoneNo && errors.phoneNo.message}
+                            <FormFeedback invalid={!!errors.factory}>
+                              {errors.factory && errors.factory.message}
                             </FormFeedback>
                           </Col>
                         </Row>
-
-                        <FormGroup>
-                          <label htmlFor="feAddress">Alamat</label>
-                          <FormInput
-                            id="feAddress"
-                            placeholder="Jl. 1234 Jatikramat"
-                            name="address"
-                            invalid={!!errors.address}
-                            innerRef={register({
-                              required: "Wajib diisi",
-                              minLength: {
-                                value: 2,
-                                message: "Minimal 2 karakter"
-                              }
-                            })}
-                          />
-                          <FormFeedback invalid={!!errors.address}>
-                            {errors.address && errors.address.message}
-                          </FormFeedback>
-                        </FormGroup>
                         <Button type="submit">Tambah Obat Baru</Button>
                       </Form>
                     </Col>
@@ -309,6 +397,8 @@ const MedicineAdd = props => {
 };
 
 const MedicineEdit = props => {
+  const medsTypeList = useResource(MedsTypeResource.listShape(), {});
+  const medsCategoryList = useResource(MedsCategoryResource.listShape(), {});
   const medicine = useResource(MedicineResource.detailShape(), {
     id: props.match.params.medicineId
   });
@@ -317,8 +407,12 @@ const MedicineEdit = props => {
   const { handleSubmit, register, errors } = useForm({
     defaultValues: {
       name: medicine.name,
-      phoneNo: medicine.phoneNo,
-      address: medicine.address
+      price: Number(medicine.price),
+      factory: medicine.factory,
+      currStock: medicine.currStock,
+      minStock: medicine.minStock,
+      medsTypeId: medicine.medsType.data.id,
+      medsCategoryId: medicine.medsCategory.data.id
     }
   });
   // const invalidateMedicineList = useInvalidator(MedicineResource.listShape(), {});
@@ -354,7 +448,7 @@ const MedicineEdit = props => {
                     <Col>
                       <Form onSubmit={handleSubmit(onSubmit)}>
                         <Row form>
-                          <Col md="6" className="form-group">
+                          <Col md="12" className="form-group">
                             <label htmlFor="feName">Nama</label>
                             <FormInput
                               id="feName"
@@ -373,50 +467,133 @@ const MedicineEdit = props => {
                               {errors.name && errors.name.message}
                             </FormFeedback>
                           </Col>
-                          <Col md="6">
-                            <label htmlFor="fePhoneNo">No. Handphone</label>
+                        </Row>
+
+                        <Row form>
+                          <Col md="6" className="form-group">
+                            <label htmlFor="fePrice">Harga</label>
                             <FormInput
-                              name="phoneNo"
-                              id="fePhoneNo"
-                              placeholder="08123456789"
-                              invalid={!!errors.phoneNo}
+                              id="fePrice"
+                              name="price"
+                              placeholder="Harga"
+                              invalid={!!errors.price}
+                              innerRef={register({
+                                required: "Wajib diisi",
+                                pattern: {
+                                  value: /^\d+$/,
+                                  message: "Hanya angka"
+                                }
+                              })}
+                            />
+                            <FormFeedback invalid={!!errors.price}>
+                              {errors.price && errors.price.message}
+                            </FormFeedback>
+                          </Col>
+                          <Col md="6" className="form-group">
+                            <label htmlFor="feMedsCategory">Jenis</label>
+                            <FormSelect
+                              id="feMedsCategory"
+                              name="medsCategoryId"
+                              innerRef={register({
+                                required: "Wajib dipilih"
+                              })}
+                            >
+                              {medsCategoryList.map(medsCategory => (
+                                <option
+                                  value={medsCategory.id}
+                                  key={medsCategory.id}
+                                >
+                                  {medsCategory.name}
+                                </option>
+                              ))}
+                            </FormSelect>
+                            <FormFeedback invalid={!!errors.medsCategoryId}>
+                              {errors.medsCategoryId &&
+                                errors.medsCategoryId.message}
+                            </FormFeedback>
+                          </Col>
+                        </Row>
+
+                        <Row form>
+                          <Col md="4" className="form-group">
+                            <label htmlFor="feCurrStock">Stok</label>
+                            <FormInput
+                              id="feCurrStock"
+                              name="currStock"
+                              placeholder="Stok"
+                              invalid={!!errors.currStock}
+                              innerRef={register({
+                                required: "Wajib diisi",
+                                pattern: {
+                                  value: /^\d+$/,
+                                  message: "Hanya angka"
+                                }
+                              })}
+                            />
+                            <FormFeedback invalid={!!errors.currStock}>
+                              {errors.currStock && errors.currStock.message}
+                            </FormFeedback>
+                          </Col>
+                          <Col md="4" className="form-group">
+                            <label htmlFor="feMedsType">Satuan</label>
+                            <FormSelect
+                              id="feMedsType"
+                              name="medsTypeId"
+                              innerRef={register({
+                                required: "Wajib dipilih"
+                              })}
+                            >
+                              {medsTypeList.map(medsType => (
+                                <option value={medsType.id} key={medsType.id}>
+                                  {medsType.name}
+                                </option>
+                              ))}
+                            </FormSelect>
+                            <FormFeedback invalid={!!errors.medsTypeId}>
+                              {errors.medsTypeId && errors.medsTypeId.message}
+                            </FormFeedback>
+                          </Col>
+                          <Col md="4" className="form-group">
+                            <label htmlFor="feMinStock">Stok Minimal</label>
+                            <FormInput
+                              id="feMinStock"
+                              name="minStock"
+                              placeholder="Stok Minimal"
+                              invalid={!!errors.minStock}
+                              innerRef={register({
+                                required: "Wajib diisi",
+                                pattern: {
+                                  value: /^\d+$/,
+                                  message: "Hanya angka"
+                                }
+                              })}
+                            />
+                            <FormFeedback invalid={!!errors.minStock}>
+                              {errors.minStock && errors.minStock.message}
+                            </FormFeedback>
+                          </Col>
+                        </Row>
+                        <Row form>
+                          <Col md="12" className="form-group">
+                            <label htmlFor="feFactory">Pabrik</label>
+                            <FormInput
+                              id="feFactory"
+                              name="factory"
+                              placeholder="Pabrik"
+                              invalid={!!errors.factory}
                               innerRef={register({
                                 required: "Wajib diisi",
                                 minLength: {
                                   value: 2,
                                   message: "Minimal 2 karakter"
-                                },
-                                pattern: {
-                                  value: /^[0-9-]*$/,
-                                  message: "Hanya angka dan karakter: -"
                                 }
                               })}
                             />
-                            <FormFeedback invalid={!!errors.phoneNo}>
-                              {errors.phoneNo && errors.phoneNo.message}
+                            <FormFeedback invalid={!!errors.factory}>
+                              {errors.factory && errors.factory.message}
                             </FormFeedback>
                           </Col>
                         </Row>
-
-                        <FormGroup>
-                          <label htmlFor="feAddress">Alamat</label>
-                          <FormInput
-                            id="feAddress"
-                            placeholder="Jl. 1234 Jatikramat"
-                            name="address"
-                            invalid={!!errors.address}
-                            innerRef={register({
-                              required: "Wajib diisi",
-                              minLength: {
-                                value: 2,
-                                message: "Minimal 2 karakter"
-                              }
-                            })}
-                          />
-                          <FormFeedback invalid={!!errors.address}>
-                            {errors.address && errors.address.message}
-                          </FormFeedback>
-                        </FormGroup>
                         <Button type="submit">Ubah Obat</Button>
                       </Form>
                     </Col>
