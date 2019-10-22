@@ -85,7 +85,7 @@ const ListActions = ({ medicine }) => {
 
 const MedicineList = () => {
   const [query, setQuery] = React.useState("");
-  const medicineList = useResource(MedicineResource.listShape(), {});
+  const medicineList = useResource(MedicineResource.minimalListShape(), {});
   const onSearch = e => {
     setQuery(e.target.value);
   };
@@ -93,11 +93,7 @@ const MedicineList = () => {
   return (
     <>
       <Row noGutters className="page-header py-4">
-        <PageTitle
-          title="Obat"
-          subtitle="Daftar Obat"
-          className="text-sm-left"
-        />
+        <PageTitle title="Pengadaan" className="text-sm-left" />
       </Row>
       <Row>
         <Col>
@@ -105,6 +101,12 @@ const MedicineList = () => {
             <CardHeader className="border-bottom">
               <Row>
                 <Col lg="4">
+                  <VAlign>
+                    <h6 className="m-0">Obat dengan Stok Minimal</h6>
+                  </VAlign>
+                </Col>
+
+                <Col lg={{ offset: 4, size: 4 }}>
                   <VAlign>
                     <FormInput
                       id="feQuery"
@@ -114,16 +116,6 @@ const MedicineList = () => {
                       value={query}
                     />
                   </VAlign>
-                </Col>
-
-                <Col lg={{ offset: 6, size: 2 }}>
-                  <AuthorizedView permissionType="write-medicine">
-                    <Link to="/obat/add">
-                      <Button block size="sm" theme="primary">
-                        Tambah Obat
-                      </Button>
-                    </Link>
-                  </AuthorizedView>
                 </Col>
               </Row>
             </CardHeader>
@@ -607,14 +599,14 @@ const MedicineEdit = props => {
   );
 };
 
-const Medicine = () => {
+const Procurement = () => {
   return (
     <Container fluid className="main-content-container px-4">
-      <Route exact path="/obat" component={MedicineList} />
-      <Route path="/obat/add" component={MedicineAdd} />
-      <Route path="/obat/edit/:medicineId" component={MedicineEdit} />
+      <Route exact path="/pengadaan" component={MedicineList} />
+      <Route path="/pengadaan/add" component={MedicineAdd} />
+      <Route path="/pengadaan/edit/:medicineId" component={MedicineEdit} />
     </Container>
   );
 };
 
-export default Medicine;
+export default Procurement;

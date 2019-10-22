@@ -14,6 +14,7 @@ import BlogPosts from "./views/BlogPosts";
 import Home from "./views/Home";
 import Doctor from "./views/Doctor";
 import Medicine from "./views/Medicine";
+import Procurement from "./views/Procurement";
 import Staff from "./views/Staff";
 import Supplier from "./views/Supplier";
 import Login from "./views/Login";
@@ -55,6 +56,11 @@ export default [
     path: "/obat",
     layout: DefaultLayout,
     component: Medicine
+  },
+  {
+    path: "/pengadaan",
+    layout: DefaultLayout,
+    component: Procurement
   },
   {
     path: "/blog-overview",
