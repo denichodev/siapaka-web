@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 import {
   Dropdown,
   DropdownToggle,
@@ -8,8 +8,8 @@ import {
   Collapse,
   NavItem,
   NavLink
-} from 'shards-react';
-import UserContext from 'contexts/UserContext';
+} from "shards-react";
+import UserContext from "contexts/UserContext";
 
 const UserActions = () => {
   const user = React.useContext(UserContext);
@@ -26,11 +26,11 @@ const UserActions = () => {
       <DropdownToggle caret tag={NavLink} className="text-nowrap px-3">
         <img
           className="user-avatar rounded-circle mr-2"
-          src={require('./../../../../images/avatars/0.jpg')}
+          src={require("./../../../../images/avatars/0.jpg")}
           alt="User Avatar"
-        />{' '}
+        />{" "}
         <span className="d-none d-md-inline-block">
-          {user.me && user.me.name}
+          {user.me && user.me.name} - {user.me && user.me.role_id}
         </span>
       </DropdownToggle>
       <Collapse tag={DropdownMenu} right small open={visible}>

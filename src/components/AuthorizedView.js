@@ -7,16 +7,24 @@ const permissions = {
     "edit-doctor",
     "add-doctor",
     "delete-doctor",
+
     "read-supplier",
     "edit-supplier",
     "add-supplier",
     "delete-supplier",
+
     "read-staff",
     "edit-staff",
     "add-staff",
     "delete-staff",
+
     "delete-medicine",
-    "write-medicine"
+    "write-medicine",
+
+    "write-procurement",
+    "read-procurement",
+    "accept-procurement",
+    "delete-procurement"
   ],
   KG: ["read-doctor", "read-supplier"],
   KAS: ["read-doctor", "read-supplier"]
