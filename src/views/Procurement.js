@@ -340,15 +340,10 @@ const ProcurementDetail = props => {
     setMedicines([...medicines.filter(m => m.id !== med.id), medToAdd]);
   };
 
-  console.log(medicines);
-
   return (
     <>
       <Row noGutters className="page-header py-4">
-        <PageTitle
-          title={userRole === "APT" ? "Detail Pengadaan" : "Pengadaan"}
-          className="text-sm-left"
-        />
+        <PageTitle title="Detail Pengadaan" className="text-sm-left" />
       </Row>
 
       <Row>
@@ -399,16 +394,6 @@ const ProcurementDetail = props => {
                     <h6 className="m-0">Daftar Obat</h6>
                   </VAlign>
                 </Col>
-
-                <Col lg={{ size: 2 }}>
-                  <AuthorizedView permissionType="add-procurement">
-                    <Link to="/pengadaan/add">
-                      <Button block size="sm" theme="primary">
-                        Tambah Pengadaan
-                      </Button>
-                    </Link>
-                  </AuthorizedView>
-                </Col>
               </Row>
             </CardHeader>
             <CardBody className="p-0 pb-3">
@@ -451,21 +436,23 @@ const ProcurementDetail = props => {
                         <td>{`${med.qty} ${
                           med.qtyType === "BOX" ? "Dus" : "Karton"
                         }`}</td>
-                        <td className="d-flex justify-content-center">
-                          <Button
-                            type="button"
-                            size="sm"
-                            outline
-                            theme="danger"
-                            onClick={() => {
-                              setMedicines(
-                                medicines.filter(m => m.id !== med.id)
-                              );
-                            }}
-                          >
-                            <i className="material-icons">delete</i>
-                          </Button>
-                        </td>
+                        {userRole === "APT" && (
+                          <td className="d-flex justify-content-center">
+                            <Button
+                              type="button"
+                              size="sm"
+                              outline
+                              theme="danger"
+                              onClick={() => {
+                                setMedicines(
+                                  medicines.filter(m => m.id !== med.id)
+                                );
+                              }}
+                            >
+                              <i className="material-icons">delete</i>
+                            </Button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -516,59 +503,65 @@ const ProcurementDetail = props => {
                   </thead>
                   <tbody>
                     {minimalMedicineList.map(medicine => (
-                      <MinMedRow medicine={medicine} onAdd={addMedicine} />
+                      <MinMedRow
+                        medicine={medicine}
+                        onAdd={addMedicine}
+                        hideActions={userRole !== "APT"}
+                      />
                     ))}
                   </tbody>
                 </table>
               </div>
             </CardBody>
           </Card>
-          <Card small className="mb-4">
-            <CardHeader className="border-bottom">
-              <Row>
-                <Col xs="6" sm="8" lg="10">
-                  <VAlign>
-                    <h6 className="m-0">Tambah Obat Baru</h6>
-                  </VAlign>
-                </Col>
-              </Row>
-            </CardHeader>
-            <CardBody className="p-0 pb-3">
-              <ListGroup flush>
-                <ListGroupItem className="p-3">
-                  <NewMedForm
-                    onSubmit={(values, qty, qtyType) => {
-                      const medToAdd = {
-                        ...values,
-                        id: `(baru-${fakeIdCounter})`,
-                        medsCategory: {
-                          data: {
-                            id: values.medsCategoryId,
-                            name: medsCategoryMap[values.medsCategoryId]
+          {userRole === "APT" && (
+            <Card small className="mb-4">
+              <CardHeader className="border-bottom">
+                <Row>
+                  <Col xs="6" sm="8" lg="10">
+                    <VAlign>
+                      <h6 className="m-0">Tambah Obat Baru</h6>
+                    </VAlign>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody className="p-0 pb-3">
+                <ListGroup flush>
+                  <ListGroupItem className="p-3">
+                    <NewMedForm
+                      onSubmit={(values, qty, qtyType) => {
+                        const medToAdd = {
+                          ...values,
+                          id: `(baru-${fakeIdCounter})`,
+                          medsCategory: {
+                            data: {
+                              id: values.medsCategoryId,
+                              name: medsCategoryMap[values.medsCategoryId]
+                            }
+                          },
+                          medsType: {
+                            data: {
+                              id: values.medsTypeId,
+                              name: medsTypeMap[values.medsTypeId]
+                            }
                           }
-                        },
-                        medsType: {
-                          data: {
-                            id: values.medsTypeId,
-                            name: medsTypeMap[values.medsTypeId]
-                          }
-                        }
-                      };
-                      setFakeIdCounter(prev => (prev += 1));
-                      addMedicine(medToAdd, qty, qtyType);
-                    }}
-                  />
-                </ListGroupItem>
-              </ListGroup>
-            </CardBody>
-          </Card>
+                        };
+                        setFakeIdCounter(prev => (prev += 1));
+                        addMedicine(medToAdd, qty, qtyType);
+                      }}
+                    />
+                  </ListGroupItem>
+                </ListGroup>
+              </CardBody>
+            </Card>
+          )}
         </Col>
       </Row>
     </>
   );
 };
 
-const MinMedRow = ({ medicine, onAdd }) => {
+const MinMedRow = ({ medicine, onAdd, hideActions }) => {
   const [qty, setQty] = React.useState(1);
   const [qtyType, setQtyType] = React.useState("BOX");
 
@@ -583,49 +576,51 @@ const MinMedRow = ({ medicine, onAdd }) => {
       <td>{medicine.medsType.data.name}</td>
       <td>{medicine.minStock}</td>
       <React.Suspense>
-        <td className="d-flex justify-content-center">
-          <div className="mr-2">
-            <QtyInput
-              type="number"
-              min="1"
-              id="feQty"
-              name="qty"
+        {!hideActions && (
+          <td className="d-flex justify-content-center">
+            <div className="mr-2">
+              <QtyInput
+                type="number"
+                min="1"
+                id="feQty"
+                name="qty"
+                size="sm"
+                placeholder="qty"
+                value={qty}
+                onChange={e => {
+                  if (e.target.value.length) {
+                    setQty(e.target.value);
+                  } else {
+                    setQty(1);
+                  }
+                }}
+              />
+            </div>
+            <div className="mr-2">
+              <FormSelect
+                id="feQtyType"
+                name="qtyType"
+                size="sm"
+                placeholder="Satuan"
+                value={qtyType}
+                onChange={e => setQtyType(e.target.value)}
+              >
+                <option value="BOX">Dus</option>
+                <option value="CARTON">Karton</option>
+              </FormSelect>
+            </div>
+            <Button
+              type="button"
               size="sm"
-              placeholder="qty"
-              value={qty}
-              onChange={e => {
-                if (e.target.value.length) {
-                  setQty(e.target.value);
-                } else {
-                  setQty(1);
-                }
-              }}
-            />
-          </div>
-          <div className="mr-2">
-            <FormSelect
-              id="feQtyType"
-              name="qtyType"
-              size="sm"
-              placeholder="Satuan"
-              value={qtyType}
-              onChange={e => setQtyType(e.target.value)}
+              outline
+              theme="secondary"
+              className="mr-2"
+              onClick={() => onAdd(medicine, qty, qtyType)}
             >
-              <option value="BOX">Dus</option>
-              <option value="CARTON">Karton</option>
-            </FormSelect>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            outline
-            theme="secondary"
-            className="mr-2"
-            onClick={() => onAdd(medicine, qty, qtyType)}
-          >
-            <i className="material-icons">add</i>
-          </Button>
-        </td>
+              <i className="material-icons">add</i>
+            </Button>
+          </td>
+        )}
       </React.Suspense>
     </tr>
   );
