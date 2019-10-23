@@ -21,12 +21,32 @@ const permissions = {
     "delete-medicine",
     "write-medicine",
 
+    "add-procurement",
     "write-procurement",
     "read-procurement",
     "accept-procurement",
     "delete-procurement"
   ],
-  KG: ["read-doctor", "read-supplier"],
+  KG: [
+    "read-doctor",
+
+    "read-supplier",
+    "edit-supplier",
+    "add-supplier",
+
+    "write-procurement",
+    "add-procurement",
+    "read-procurement",
+    "delete-procurement"
+  ],
+  APT: [
+    "read-doctor",
+
+    "read-supplier",
+
+    "write-procurement",
+    "read-procurement"
+  ],
   KAS: ["read-doctor", "read-supplier"]
 };
 

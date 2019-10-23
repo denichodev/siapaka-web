@@ -5,7 +5,6 @@ import useForm from "react-hook-form";
 import DatePicker from "react-datepicker";
 import styled from "styled-components";
 import UserContext from "contexts/UserContext";
-import { Separator } from "styles/commons";
 import AuthError from "./AuthError";
 import dayjs from "dayjs";
 
@@ -77,23 +76,38 @@ const ListActions = ({ procurement }) => {
     }
   };
 
-  if (!procurement) {
+  if (!procurement || procurement.status !== "PROCESS") {
     return null;
   }
 
   return (
     <>
-      <AuthorizedView permissionType="delete-procurement">
-        <Button
-          type="submit"
-          size="sm"
-          outline
-          onClick={handleDelete}
-          onBlur={handleBlur}
-          theme={confirmDelete ? "danger" : "warning"}
-        >
-          <i className="material-icons">delete</i>
-        </Button>
+      <div className="mr-2">
+        <AuthorizedView permissionType="delete-procurement">
+          <Button
+            type="submit"
+            size="sm"
+            outline
+            onClick={handleDelete}
+            onBlur={handleBlur}
+            theme={confirmDelete ? "danger" : "warning"}
+          >
+            <i className="material-icons">delete</i>
+          </Button>
+        </AuthorizedView>
+      </div>
+      <AuthorizedView permissionType="read-procurement">
+        <Link to={`/pengadaan/${procurement.id}`}>
+          <Button
+            type="submit"
+            size="sm"
+            outline
+            onClick={() => {}}
+            theme="info"
+          >
+            <i className="material-icons">visibility</i>
+          </Button>
+        </Link>
       </AuthorizedView>
     </>
   );
@@ -133,7 +147,7 @@ const ProcurementList = () => {
                   </VAlign>
                 </Col>
 
-                <Col lg={{ offset: 2, size: 4 }}>
+                <Col lg={{ offset: userRole === "APT" ? 4 : 2, size: 4 }}>
                   <VAlign>
                     <FormInput
                       id="feQuery"
@@ -145,7 +159,7 @@ const ProcurementList = () => {
                   </VAlign>
                 </Col>
                 <Col lg={{ size: 2 }}>
-                  <AuthorizedView permissionType="write-procurement">
+                  <AuthorizedView permissionType="add-procurement">
                     <Link to="/pengadaan/add">
                       <Button block size="sm" theme="primary">
                         Tambah Pengadaan
@@ -274,6 +288,278 @@ const ProcurementList = () => {
                     ))}
                 </tbody>
               </table>
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+const createMedicinesFromAPI = (meds, uMeds) => {
+  const verifiedMeds = meds.map(m => ({
+    ...m.medicine.data,
+    qty: m.qty,
+    qtytype: m.qtyType
+  }));
+
+  const unverifiedMeds = uMeds.map(m => ({
+    ...m,
+    id: `${m.id} (baru)`
+  }));
+
+  return unverifiedMeds.concat(verifiedMeds);
+};
+
+const ProcurementDetail = props => {
+  const procurement = useResource(ProcurementResource.detailShape(), {
+    id: props.match.params.procurementId
+  });
+  const [fakeIdCounter, setFakeIdCounter] = React.useState(1);
+
+  const userState = React.useContext(UserContext);
+  const userRole = userState.me.role_id;
+
+  // Adding meds
+  const [medicines, setMedicines] = React.useState(
+    createMedicinesFromAPI(
+      procurement.medicines.data,
+      procurement.unverifiedMedicines.data
+    )
+  );
+  const minimalMedicineList = useResource(
+    MedicineResource.minimalListShape(),
+    {}
+  );
+  const addMedicine = (med, qty, qtyType) => {
+    const medToAdd = {
+      ...med,
+      qty,
+      qtyType
+    };
+    setMedicines([...medicines.filter(m => m.id !== med.id), medToAdd]);
+  };
+
+  console.log(medicines);
+
+  return (
+    <>
+      <Row noGutters className="page-header py-4">
+        <PageTitle
+          title={userRole === "APT" ? "Detail Pengadaan" : "Pengadaan"}
+          className="text-sm-left"
+        />
+      </Row>
+
+      <Row>
+        <Col>
+          <Card small className="mb-4">
+            <CardHeader className="border-bottom">
+              <Row>
+                <Col lg="4">
+                  <VAlign>
+                    <h6 className="m-0">Detail</h6>
+                  </VAlign>
+                </Col>
+              </Row>
+            </CardHeader>
+            <CardBody className="p-0 pb-3">
+              <ListGroup flush>
+                <ListGroupItem className="p-3">
+                  <Row className="pl-3 pr-3 pb-3">
+                    Nomor Transaksi: {procurement.id}
+                  </Row>
+                  <Row className="pl-3 pr-3 pb-3">
+                    Status: {procurement.status}
+                  </Row>
+                  <Row className="pl-3 pr-3 pb-3">
+                    {procurement.supplier.data.name}
+                  </Row>
+                  <Row className="pl-3 pr-3 pb-3">
+                    {procurement.supplier.data.address}
+                  </Row>
+                  <Row className="pl-3 pr-3 pb-3">
+                    {dayjs(procurement.orderDate).format("DD/MM/YYYY")}
+                  </Row>
+                </ListGroupItem>
+              </ListGroup>
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* procs */}
+      <Row>
+        <Col>
+          <Card small className="mb-4">
+            <CardHeader className="border-bottom">
+              <Row>
+                <Col lg="4">
+                  <VAlign>
+                    <h6 className="m-0">Daftar Obat</h6>
+                  </VAlign>
+                </Col>
+
+                <Col lg={{ size: 2 }}>
+                  <AuthorizedView permissionType="add-procurement">
+                    <Link to="/pengadaan/add">
+                      <Button block size="sm" theme="primary">
+                        Tambah Pengadaan
+                      </Button>
+                    </Link>
+                  </AuthorizedView>
+                </Col>
+              </Row>
+            </CardHeader>
+            <CardBody className="p-0 pb-3">
+              <div className="p-0 pb-4">
+                <table className="table mb-0">
+                  <thead className="bg-light">
+                    <tr>
+                      <th scope="col" className="border-0">
+                        ID
+                      </th>
+                      <th scope="col" className="border-0">
+                        Nama
+                      </th>
+                      <th scope="col" className="border-0">
+                        Harga
+                      </th>
+                      <th scope="col" className="border-0">
+                        Jenis Obat
+                      </th>
+                      <th scope="col" className="border-0">
+                        Pabrik
+                      </th>
+                      <th scope="col" className="border-0">
+                        Satuan
+                      </th>
+                      <th scope="col" className="border-0">
+                        Jumlah Pengadaan
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {medicines.map((med, index) => (
+                      <tr key={med.id}>
+                        <td>{med.id}</td>
+                        <td>{med.name}</td>
+                        <td>{med.price}</td>
+                        <td>{med.medsCategory.data.name}</td>
+                        <td>{med.factory}</td>
+                        <td>{med.medsType.data.name}</td>
+                        <td>{`${med.qty} ${
+                          med.qtyType === "BOX" ? "Dus" : "Karton"
+                        }`}</td>
+                        <td className="d-flex justify-content-center">
+                          <Button
+                            type="button"
+                            size="sm"
+                            outline
+                            theme="danger"
+                            onClick={() => {
+                              setMedicines(
+                                medicines.filter(m => m.id !== med.id)
+                              );
+                            }}
+                          >
+                            <i className="material-icons">delete</i>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </Card>
+          <Card small className="mb-4">
+            <CardHeader className="border-bottom">
+              <Row>
+                <Col xs="6" sm="8" lg="10">
+                  <VAlign>
+                    <h6 className="m-0">Obat Minimal</h6>
+                  </VAlign>
+                </Col>
+              </Row>
+            </CardHeader>
+            <CardBody className="p-0 pb-3">
+              <div className="p-0 pb-3">
+                <table className="table mb-0">
+                  <thead className="bg-light">
+                    <tr>
+                      <th scope="col" className="border-0">
+                        ID
+                      </th>
+                      <th scope="col" className="border-0">
+                        Nama
+                      </th>
+                      <th scope="col" className="border-0">
+                        Harga
+                      </th>
+                      <th scope="col" className="border-0">
+                        Jenis Obat
+                      </th>
+                      <th scope="col" className="border-0">
+                        Pabrik
+                      </th>
+                      <th scope="col" className="border-0">
+                        Stok
+                      </th>
+                      <th scope="col" className="border-0">
+                        Satuan
+                      </th>
+                      <th scope="col" className="border-0">
+                        Min. Stok
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {minimalMedicineList.map(medicine => (
+                      <MinMedRow medicine={medicine} onAdd={addMedicine} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </Card>
+          <Card small className="mb-4">
+            <CardHeader className="border-bottom">
+              <Row>
+                <Col xs="6" sm="8" lg="10">
+                  <VAlign>
+                    <h6 className="m-0">Tambah Obat Baru</h6>
+                  </VAlign>
+                </Col>
+              </Row>
+            </CardHeader>
+            <CardBody className="p-0 pb-3">
+              <ListGroup flush>
+                <ListGroupItem className="p-3">
+                  <NewMedForm
+                    onSubmit={(values, qty, qtyType) => {
+                      const medToAdd = {
+                        ...values,
+                        id: `(baru-${fakeIdCounter})`,
+                        medsCategory: {
+                          data: {
+                            id: values.medsCategoryId,
+                            name: medsCategoryMap[values.medsCategoryId]
+                          }
+                        },
+                        medsType: {
+                          data: {
+                            id: values.medsTypeId,
+                            name: medsTypeMap[values.medsTypeId]
+                          }
+                        }
+                      };
+                      setFakeIdCounter(prev => (prev += 1));
+                      addMedicine(medToAdd, qty, qtyType);
+                    }}
+                  />
+                </ListGroupItem>
+              </ListGroup>
             </CardBody>
           </Card>
         </Col>
@@ -1048,6 +1334,7 @@ const Procurement = () => {
     <Container fluid className="main-content-container px-4">
       <Route exact path="/pengadaan" component={ProcurementList} />
       <Route path="/pengadaan/add" component={ProcurementAdd} />
+      <Route path="/pengadaan/:procurementId" component={ProcurementDetail} />
       {/* <Route
         path="/pengadaan/edit/:procurementId"
         component={ProcurementEdit}
