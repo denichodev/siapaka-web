@@ -8,6 +8,11 @@ const permissions = {
     "add-doctor",
     "delete-doctor",
 
+    "read-outlet",
+    "edit-outlet",
+    "add-outlet",
+    "delete-outlet",
+
     "read-supplier",
     "edit-supplier",
     "add-supplier",

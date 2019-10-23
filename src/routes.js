@@ -16,6 +16,7 @@ import Doctor from "./views/Doctor";
 import Medicine from "./views/Medicine";
 import Procurement from "./views/Procurement";
 import Staff from "./views/Staff";
+import Outlet from "./views/Outlet";
 import Supplier from "./views/Supplier";
 import Login from "./views/Login";
 
@@ -41,6 +42,11 @@ export default [
     path: "/karyawan",
     layout: DefaultLayout,
     component: Staff
+  },
+  {
+    path: "/outlet",
+    layout: DefaultLayout,
+    component: Outlet
   },
   {
     path: "/supplier",
