@@ -1,18 +1,23 @@
 import React from "react";
-import { Route, Link } from "react-router-dom";
+import { Route, Link, Switch } from "react-router-dom";
 import { useResource, useFetcher, useInvalidator } from "rest-hooks";
 import useForm from "react-hook-form";
 import DatePicker from "react-datepicker";
 import styled from "styled-components";
+import ReactToPrint from "react-to-print";
 import UserContext from "contexts/UserContext";
 import AuthError from "./AuthError";
 import dayjs from "dayjs";
+
+import ProcurementPrint from "./prints/ProcurementPrint";
 
 import { VAlign } from "styles/commons";
 import ProcurementResource from "resources/procurement";
 import MedicineResource from "resources/medicine";
 import MedsTypeResource from "resources/medsType";
 import SupplierResource from "resources/supplier";
+import UnverifiedMedicineResource from "resources/unverifiedMedicine";
+import ProcurementMedicineResource from "resources/procurementMedicine";
 import MedsCategoryResource from "resources/medsCategory";
 import { useHistory } from "react-router-dom";
 import {
@@ -60,7 +65,9 @@ const QtyInput = styled(FormInput)`
 
 const ListActions = ({ procurement }) => {
   const del = useFetcher(ProcurementResource.deleteShape());
+  const userState = React.useContext(UserContext);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const printPageRef = React.useRef();
 
   const handleDelete = () => {
     if (!confirmDelete) {
@@ -76,26 +83,52 @@ const ListActions = ({ procurement }) => {
     }
   };
 
-  if (!procurement || procurement.status !== "PROCESS") {
+  if (!procurement) {
     return null;
   }
 
   return (
     <>
-      <div className="mr-2">
-        <AuthorizedView permissionType="delete-procurement">
-          <Button
-            type="submit"
-            size="sm"
-            outline
-            onClick={handleDelete}
-            onBlur={handleBlur}
-            theme={confirmDelete ? "danger" : "warning"}
-          >
-            <i className="material-icons">delete</i>
-          </Button>
-        </AuthorizedView>
-      </div>
+      {procurement.status !== "VERIFIED" && (
+        <div className="mr-2">
+          <AuthorizedView permissionType="delete-procurement">
+            <Button
+              type="submit"
+              size="sm"
+              outline
+              onClick={handleDelete}
+              onBlur={handleBlur}
+              theme={confirmDelete ? "danger" : "warning"}
+            >
+              <i className="material-icons">delete</i>
+            </Button>
+          </AuthorizedView>
+        </div>
+      )}
+
+      {procurement.status === "VERIFIED" &&
+        (userState.me.role_id === "APT" || userState.me.role_id === "ADM") && (
+          <div className="mr-2">
+            <AuthorizedView permissionType="delete-procurement">
+              <ReactToPrint
+                trigger={() => (
+                  <Button type="submit" size="sm" outline theme="secondary">
+                    <i className="material-icons">print</i>
+                  </Button>
+                )}
+                content={() => printPageRef.current}
+              />
+
+              <div style={{ display: "none" }}>
+                <ProcurementPrint
+                  ref={printPageRef}
+                  data={procurement}
+                  user={userState.me}
+                />
+              </div>
+            </AuthorizedView>
+          </div>
+        )}
       <AuthorizedView permissionType="read-procurement">
         <Link to={`/pengadaan/${procurement.id}`}>
           <Button
@@ -109,6 +142,72 @@ const ListActions = ({ procurement }) => {
           </Button>
         </Link>
       </AuthorizedView>
+    </>
+  );
+};
+
+const ListActionsProcurementMedicine = ({
+  medicine,
+  onDeleteMedicine,
+  procurementId
+}) => {
+  const delProcMed = useFetcher(ProcurementMedicineResource.deleteShape());
+  const delUnfMed = useFetcher(UnverifiedMedicineResource.deleteShape());
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  const handleDelete = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+    } else {
+      // medicine db id undefined means it is a newly added item,
+      // not undefined means it is from db.
+      if (typeof medicine.dbId !== "undefined") {
+        if (typeof medicine.id === "string" && medicine.id.includes("baru")) {
+          // (baru) means unverified medicine from db
+          if (medicine.id.includes("(baru)")) {
+            delUnfMed(undefined, { id: medicine.dbId });
+            onDeleteMedicine(medicine.id);
+          } else {
+            onDeleteMedicine(medicine.id);
+          }
+        } else {
+          // del normal procurement medicine
+          delProcMed(undefined, { id: medicine.dbId });
+          onDeleteMedicine(medicine.id);
+        }
+      } else {
+        // if not from db, just delete
+        onDeleteMedicine(medicine.id);
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    if (confirmDelete) {
+      setConfirmDelete(false);
+    }
+  };
+
+  if (!medicine) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="mr-2">
+        <AuthorizedView permissionType="delete-procurement-medicine">
+          <Button
+            type="submit"
+            size="sm"
+            outline
+            onClick={handleDelete}
+            onBlur={handleBlur}
+            theme={confirmDelete ? "danger" : "warning"}
+          >
+            <i className="material-icons">delete</i>
+          </Button>
+        </AuthorizedView>
+      </div>
     </>
   );
 };
@@ -130,7 +229,11 @@ const ProcurementList = () => {
     <>
       <Row noGutters className="page-header py-4">
         <PageTitle
-          title={userRole === "APT" ? "Rekapitulasi Pengadaan" : "Pengadaan"}
+          title={
+            userRole === "APT" || userRole === "ADM"
+              ? "Rekapitulasi Pengadaan"
+              : "Pengadaan"
+          }
           className="text-sm-left"
         />
       </Row>
@@ -147,7 +250,12 @@ const ProcurementList = () => {
                   </VAlign>
                 </Col>
 
-                <Col lg={{ offset: userRole === "APT" ? 4 : 2, size: 4 }}>
+                <Col
+                  lg={{
+                    offset: userRole === "APT" || userRole === "ADM" ? 4 : 2,
+                    size: 4
+                  }}
+                >
                   <VAlign>
                     <FormInput
                       id="feQuery"
@@ -296,15 +404,17 @@ const ProcurementList = () => {
   );
 };
 
-const createMedicinesFromAPI = (meds, uMeds) => {
+export const createMedicinesFromAPI = (meds, uMeds) => {
   const verifiedMeds = meds.map(m => ({
     ...m.medicine.data,
+    dbId: m.id,
     qty: m.qty,
-    qtytype: m.qtyType
+    qtyType: m.qtyType
   }));
 
   const unverifiedMeds = uMeds.map(m => ({
     ...m,
+    dbId: m.id,
     id: `${m.id} (baru)`
   }));
 
@@ -332,12 +442,65 @@ const ProcurementDetail = props => {
     {}
   );
   const addMedicine = (med, qty, qtyType) => {
+    const prevMeds = medicines.find(el => el.id === med.id);
     const medToAdd = {
       ...med,
       qty,
-      qtyType
+      qtyType,
+      dbId: prevMeds ? prevMeds.dbId : undefined
     };
     setMedicines([...medicines.filter(m => m.id !== med.id), medToAdd]);
+  };
+
+  // Mutating Procurements
+  const history = useHistory();
+  const declineProcurement = useFetcher(
+    ProcurementResource.declineProcurementShape()
+  );
+  const invalidateProcurementList = useInvalidator(
+    ProcurementResource.listShape(),
+    {}
+  );
+  const verifyProcurement = useFetcher(
+    ProcurementResource.verifyProcurementShape()
+  );
+
+  const onVerify = () => {
+    // console.log(procurement);
+    const fetchBody = {
+      medicines: medicines.map(med => {
+        // Cut (baru) from id;
+        const medId =
+          typeof med.id === "string" && med.id.includes("(baru)")
+            ? Number(med.id.split("(baru)")[0])
+            : med.id;
+        const unverified =
+          typeof med.id === "string" && med.id.includes("(baru)");
+        return {
+          medicineId: medId,
+          qty: med.qty,
+          dbId: med.dbId,
+          unverified,
+          qtyType: med.qtyType,
+
+          medsTypeId: med.medsType.data.id,
+          medsCategoryId: med.medsCategory.data.id,
+          name: med.name || "",
+          price: med.price || 0,
+          factory: med.factory,
+          minStock: med.minStock
+        };
+      })
+    };
+
+    verifyProcurement(fetchBody, { id: procurement.id });
+  };
+
+  const onDecline = () => {
+    declineProcurement(undefined, { id: procurement.id });
+    invalidateProcurementList({});
+
+    history.push("/pengadaan");
   };
 
   return (
@@ -351,11 +514,39 @@ const ProcurementDetail = props => {
           <Card small className="mb-4">
             <CardHeader className="border-bottom">
               <Row>
-                <Col lg="4">
+                <Col xs="6" sm="8" lg="8">
                   <VAlign>
                     <h6 className="m-0">Detail</h6>
                   </VAlign>
                 </Col>
+                {procurement.status === "PROCESS" && (
+                  <>
+                    <Col lg="2">
+                      <AuthorizedView permissionType="accept-procurement">
+                        <Button
+                          block
+                          type="button"
+                          theme="danger"
+                          onClick={onDecline}
+                        >
+                          Tolak Pengadaan
+                        </Button>
+                      </AuthorizedView>
+                    </Col>
+                    <Col lg="2">
+                      <AuthorizedView permissionType="accept-procurement">
+                        <Button
+                          block
+                          type="button"
+                          theme="success"
+                          onClick={onVerify}
+                        >
+                          Terima Pengadaan
+                        </Button>
+                      </AuthorizedView>
+                    </Col>
+                  </>
+                )}
               </Row>
             </CardHeader>
             <CardBody className="p-0 pb-3">
@@ -436,23 +627,21 @@ const ProcurementDetail = props => {
                         <td>{`${med.qty} ${
                           med.qtyType === "BOX" ? "Dus" : "Karton"
                         }`}</td>
-                        {userRole === "APT" && (
-                          <td className="d-flex justify-content-center">
-                            <Button
-                              type="button"
-                              size="sm"
-                              outline
-                              theme="danger"
-                              onClick={() => {
-                                setMedicines(
-                                  medicines.filter(m => m.id !== med.id)
-                                );
-                              }}
-                            >
-                              <i className="material-icons">delete</i>
-                            </Button>
-                          </td>
-                        )}
+                        {userRole === "APT" ||
+                          (userRole === "ADM" &&
+                            procurement.status === "PROCESS" && (
+                              <td className="d-flex justify-content-center">
+                                <ListActionsProcurementMedicine
+                                  medicine={med}
+                                  procurementId={procurement.id}
+                                  onDeleteMedicine={id =>
+                                    setMedicines(
+                                      medicines.filter(m => m.id !== id)
+                                    )
+                                  }
+                                />
+                              </td>
+                            ))}
                       </tr>
                     ))}
                   </tbody>
@@ -506,7 +695,10 @@ const ProcurementDetail = props => {
                       <MinMedRow
                         medicine={medicine}
                         onAdd={addMedicine}
-                        hideActions={userRole !== "APT"}
+                        hideActions={
+                          (userRole !== "APT" && userRole !== "ADM") ||
+                          procurement.status !== "PROCESS"
+                        }
                       />
                     ))}
                   </tbody>
@@ -514,47 +706,48 @@ const ProcurementDetail = props => {
               </div>
             </CardBody>
           </Card>
-          {userRole === "APT" && (
-            <Card small className="mb-4">
-              <CardHeader className="border-bottom">
-                <Row>
-                  <Col xs="6" sm="8" lg="10">
-                    <VAlign>
-                      <h6 className="m-0">Tambah Obat Baru</h6>
-                    </VAlign>
-                  </Col>
-                </Row>
-              </CardHeader>
-              <CardBody className="p-0 pb-3">
-                <ListGroup flush>
-                  <ListGroupItem className="p-3">
-                    <NewMedForm
-                      onSubmit={(values, qty, qtyType) => {
-                        const medToAdd = {
-                          ...values,
-                          id: `(baru-${fakeIdCounter})`,
-                          medsCategory: {
-                            data: {
-                              id: values.medsCategoryId,
-                              name: medsCategoryMap[values.medsCategoryId]
+          {(userRole === "APT" || userRole === "ADM") &&
+            procurement.status === "PROCESS" && (
+              <Card small className="mb-4">
+                <CardHeader className="border-bottom">
+                  <Row>
+                    <Col xs="6" sm="8" lg="10">
+                      <VAlign>
+                        <h6 className="m-0">Tambah Obat Baru</h6>
+                      </VAlign>
+                    </Col>
+                  </Row>
+                </CardHeader>
+                <CardBody className="p-0 pb-3">
+                  <ListGroup flush>
+                    <ListGroupItem className="p-3">
+                      <NewMedForm
+                        onSubmit={(values, qty, qtyType) => {
+                          const medToAdd = {
+                            ...values,
+                            id: `(baru-${fakeIdCounter})`,
+                            medsCategory: {
+                              data: {
+                                id: values.medsCategoryId,
+                                name: medsCategoryMap[values.medsCategoryId]
+                              }
+                            },
+                            medsType: {
+                              data: {
+                                id: values.medsTypeId,
+                                name: medsTypeMap[values.medsTypeId]
+                              }
                             }
-                          },
-                          medsType: {
-                            data: {
-                              id: values.medsTypeId,
-                              name: medsTypeMap[values.medsTypeId]
-                            }
-                          }
-                        };
-                        setFakeIdCounter(prev => (prev += 1));
-                        addMedicine(medToAdd, qty, qtyType);
-                      }}
-                    />
-                  </ListGroupItem>
-                </ListGroup>
-              </CardBody>
-            </Card>
-          )}
+                          };
+                          setFakeIdCounter(prev => (prev += 1));
+                          addMedicine(medToAdd, qty, qtyType);
+                        }}
+                      />
+                    </ListGroupItem>
+                  </ListGroup>
+                </CardBody>
+              </Card>
+            )}
         </Col>
       </Row>
     </>
@@ -1327,9 +1520,12 @@ const ProcurementAdd = props => {
 const Procurement = () => {
   return (
     <Container fluid className="main-content-container px-4">
-      <Route exact path="/pengadaan" component={ProcurementList} />
-      <Route path="/pengadaan/add" component={ProcurementAdd} />
-      <Route path="/pengadaan/:procurementId" component={ProcurementDetail} />
+      <Switch>
+        <Route exact path="/pengadaan" component={ProcurementList} />
+        <Route path="/pengadaan/add" component={ProcurementAdd} />
+        <Route path="/pengadaan/:procurementId" component={ProcurementDetail} />
+      </Switch>
+
       {/* <Route
         path="/pengadaan/edit/:procurementId"
         component={ProcurementEdit}
