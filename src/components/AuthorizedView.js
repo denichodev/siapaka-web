@@ -31,6 +31,7 @@ const permissions = {
     "read-procurement",
     "accept-procurement",
     "delete-procurement",
+    "retrieve-procurement",
 
     "delete-procurement-medicine"
   ],
@@ -44,7 +45,8 @@ const permissions = {
     "write-procurement",
     "add-procurement",
     "read-procurement",
-    "delete-procurement"
+    "delete-procurement",
+    "retrieve-procurement",
   ],
   APT: [
     "read-doctor",

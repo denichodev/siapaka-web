@@ -464,6 +464,9 @@ const ProcurementDetail = props => {
   const verifyProcurement = useFetcher(
     ProcurementResource.verifyProcurementShape()
   );
+  const retrieveProcurement = useFetcher(
+    ProcurementResource.retrieveProcurementShape()
+  );
 
   const onVerify = () => {
     // console.log(procurement);
@@ -494,6 +497,9 @@ const ProcurementDetail = props => {
     };
 
     verifyProcurement(fetchBody, { id: procurement.id });
+    invalidateProcurementList({});
+
+    history.push("/pengadaan");
   };
 
   const onDecline = () => {
@@ -502,6 +508,13 @@ const ProcurementDetail = props => {
 
     history.push("/pengadaan");
   };
+
+  const onRetrieve = () => {
+    retrieveProcurement(undefined, {id: procurement.id });
+    invalidateProcurementList({});
+
+    history.push("/pengadaan");
+  }
 
   return (
     <>
@@ -546,6 +559,20 @@ const ProcurementDetail = props => {
                       </AuthorizedView>
                     </Col>
                   </>
+                )}
+                {procurement.status === 'VERIFIED' && (userState.me.role_id === 'KG' || userState.me.role_id === 'ADM') && (
+                  <Col lg={{size:2, offset:2}}>
+                    <AuthorizedView permissionType="retrieve-procurement">
+                      <Button
+                        block
+                        type="button"
+                        theme="success"
+                        onClick={onRetrieve}
+                      >
+                        Terima Obat
+                      </Button>
+                    </AuthorizedView>
+                  </Col>
                 )}
               </Row>
             </CardHeader>
