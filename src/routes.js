@@ -15,6 +15,7 @@ import Home from "./views/Home";
 import Doctor from "./views/Doctor";
 import Medicine from "./views/Medicine";
 import Procurement from "./views/Procurement";
+import Transaction from "./views/Transaction";
 import Staff from "./views/Staff";
 import Outlet from "./views/Outlet";
 import Supplier from "./views/Supplier";
@@ -67,6 +68,11 @@ export default [
     path: "/pengadaan",
     layout: DefaultLayout,
     component: Procurement
+  },
+  {
+    path: "/transaksi",
+    layout: DefaultLayout,
+    component: Transaction
   },
   {
     path: "/blog-overview",

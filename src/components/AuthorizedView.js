@@ -33,7 +33,10 @@ const permissions = {
     "delete-procurement",
     "retrieve-procurement",
 
-    "delete-procurement-medicine"
+    "delete-procurement-medicine",
+
+    "read-transaction",
+    "add-transaction"
   ],
   KG: [
     "read-doctor",
@@ -46,7 +49,7 @@ const permissions = {
     "add-procurement",
     "read-procurement",
     "delete-procurement",
-    "retrieve-procurement",
+    "retrieve-procurement"
   ],
   APT: [
     "read-doctor",
@@ -56,9 +59,12 @@ const permissions = {
     "write-procurement",
     "read-procurement",
     "accept-procurement",
-    "delete-procurement-medicine"
+    "delete-procurement-medicine",
+
+    "read-transaction",
+    "add-transaction"
   ],
-  KAS: ["read-doctor", "read-supplier"]
+  KAS: ["read-doctor", "read-supplier", "read-transaction"]
 };
 
 const AuthorizedView = props => {
