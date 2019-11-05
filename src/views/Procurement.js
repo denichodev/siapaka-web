@@ -510,11 +510,11 @@ const ProcurementDetail = props => {
   };
 
   const onRetrieve = () => {
-    retrieveProcurement(undefined, {id: procurement.id });
+    retrieveProcurement(undefined, { id: procurement.id });
     invalidateProcurementList({});
 
     history.push("/pengadaan");
-  }
+  };
 
   return (
     <>
@@ -560,20 +560,22 @@ const ProcurementDetail = props => {
                     </Col>
                   </>
                 )}
-                {procurement.status === 'VERIFIED' && (userState.me.role_id === 'KG' || userState.me.role_id === 'ADM') && (
-                  <Col lg={{size:2, offset:2}}>
-                    <AuthorizedView permissionType="retrieve-procurement">
-                      <Button
-                        block
-                        type="button"
-                        theme="success"
-                        onClick={onRetrieve}
-                      >
-                        Terima Obat
-                      </Button>
-                    </AuthorizedView>
-                  </Col>
-                )}
+                {procurement.status === "VERIFIED" &&
+                  (userState.me.role_id === "KG" ||
+                    userState.me.role_id === "ADM") && (
+                    <Col lg={{ size: 2, offset: 2 }}>
+                      <AuthorizedView permissionType="retrieve-procurement">
+                        <Button
+                          block
+                          type="button"
+                          theme="success"
+                          onClick={onRetrieve}
+                        >
+                          Terima Obat
+                        </Button>
+                      </AuthorizedView>
+                    </Col>
+                  )}
               </Row>
             </CardHeader>
             <CardBody className="p-0 pb-3">
@@ -1546,18 +1548,23 @@ const ProcurementAdd = props => {
 
 const Procurement = () => {
   return (
-    <Container fluid className="main-content-container px-4">
-      <Switch>
-        <Route exact path="/pengadaan" component={ProcurementList} />
-        <Route path="/pengadaan/add" component={ProcurementAdd} />
-        <Route path="/pengadaan/:procurementId" component={ProcurementDetail} />
-      </Switch>
+    <AuthorizedView permissionType="read-procurement" fallback={<AuthError />}>
+      <Container fluid className="main-content-container px-4">
+        <Switch>
+          <Route exact path="/pengadaan" component={ProcurementList} />
+          <Route path="/pengadaan/add" component={ProcurementAdd} />
+          <Route
+            path="/pengadaan/:procurementId"
+            component={ProcurementDetail}
+          />
+        </Switch>
 
-      {/* <Route
+        {/* <Route
         path="/pengadaan/edit/:procurementId"
         component={ProcurementEdit}
       /> */}
-    </Container>
+      </Container>
+    </AuthorizedView>
   );
 };
 

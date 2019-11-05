@@ -16,6 +16,7 @@ import Doctor from "./views/Doctor";
 import Medicine from "./views/Medicine";
 import Procurement from "./views/Procurement";
 import Transaction from "./views/Transaction";
+import Cashier from "./views/Cashier";
 import Staff from "./views/Staff";
 import Outlet from "./views/Outlet";
 import Supplier from "./views/Supplier";
@@ -73,6 +74,11 @@ export default [
     path: "/transaksi",
     layout: DefaultLayout,
     component: Transaction
+  },
+  {
+    path: "/kasir",
+    layout: DefaultLayout,
+    component: Cashier
   },
   {
     path: "/blog-overview",

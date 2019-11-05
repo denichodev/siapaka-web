@@ -59,31 +59,14 @@ const QtyInput = styled(FormInput)`
 `;
 
 const ListActions = ({ transaction }) => {
-  const del = useFetcher(TransactionResource.deleteShape());
-  const [confirmDelete, setConfirmDelete] = React.useState(false);
-
-  const handleDelete = () => {
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-    } else {
-      del(undefined, { id: transaction.id });
-    }
-  };
-
-  const handleBlur = () => {
-    if (confirmDelete) {
-      setConfirmDelete(false);
-    }
-  };
-
   if (!transaction) {
     return null;
   }
 
   return (
     <>
-      <AuthorizedView permissionType="edit-transaction">
-        <Link to={`/transaksi/edit/${transaction.id}`}>
+      <AuthorizedView permissionType="read-cashier">
+        <Link to={`/kasir/${transaction.id}`}>
           <Button
             type="submit"
             size="sm"
@@ -91,22 +74,9 @@ const ListActions = ({ transaction }) => {
             theme="secondary"
             className="mr-2"
           >
-            <i className="material-icons">edit</i>
+            <i className="material-icons">visibility</i>
           </Button>
         </Link>
-      </AuthorizedView>
-
-      <AuthorizedView permissionType="delete-transaction">
-        <Button
-          type="submit"
-          size="sm"
-          outline
-          onClick={handleDelete}
-          onBlur={handleBlur}
-          theme={confirmDelete ? "danger" : "warning"}
-        >
-          <i className="material-icons">delete</i>
-        </Button>
       </AuthorizedView>
     </>
   );
@@ -157,7 +127,7 @@ const TransactionList = () => {
                 </Col>
 
                 <Col lg={{ size: 2, offset: 4 }}>
-                  <AuthorizedView permissionType="add-transaction">
+                  <AuthorizedView permissionType="add-cashier">
                     <Link to="/transaksi/add">
                       <Button block size="sm" theme="primary">
                         Tambah Transaksi
@@ -420,7 +390,7 @@ const TransactionAdd = props => {
   };
 
   return (
-    <AuthorizedView permissionType="add-transaction" fallback={<AuthError />}>
+    <AuthorizedView permissionType="add-cashier" fallback={<AuthError />}>
       <Row noGutters className="page-header py-4">
         <PageTitle
           title="Transaksi"
@@ -795,7 +765,7 @@ const TransactionEdit = props => {
   };
 
   return (
-    <AuthorizedView permissionType="edit-transaction" fallback={<AuthError />}>
+    <AuthorizedView permissionType="edit-cashier" fallback={<AuthError />}>
       <Row noGutters className="page-header py-4">
         <PageTitle
           title="Transaksi"
@@ -1045,19 +1015,196 @@ const TransactionEdit = props => {
   );
 };
 
-const Transaction = () => {
+const TransactionDetail = props => {
+  const transaction = useResource(TransactionResource.detailShape(), {
+    id: props.match.params.transactionId
+  });
+
+  const { handleSubmit, register, errors, watch } = useForm();
+  const watchPayAmt = watch("payAmt", 0);
+  const total = Number(transaction.tax) + Number(transaction.subtotal);
+
+  const onSubmit = values => {
+    console.log("valuess");
+  };
+
   return (
-    <AuthorizedView permissionType="read-transaction" fallback={<AuthError />}>
+    <AuthorizedView permissionType="read-cashier" fallback={<AuthError />}>
+      <Form onSubmit={handleSubmit(onSubmit)}>
+        <Row noGutters className="page-header py-4">
+          <PageTitle
+            title="Transaksi"
+            subtitle="Tambah Transaksi"
+            className="text-sm-left"
+          />
+        </Row>
+        <Row>
+          <Col>
+            <Card small className="mb-4">
+              <CardHeader className="border-bottom">
+                <Row>
+                  <Col lg="2">
+                    <VAlign>
+                      <h6 className="m-0">Detail Transaksi</h6>
+                    </VAlign>
+                  </Col>
+                  <Col lg="3">
+                    <Button type="submit">Tambah Transaksi Baru</Button>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody className=" pb-3">
+                <div>
+                  Tanggal:{" "}
+                  <strong>
+                    {dayjs(transaction.date).format("DD MMMM YYYY")}
+                  </strong>
+                </div>
+                <div>
+                  Kode: <strong>{transaction.id}</strong>
+                </div>
+                <div>
+                  Nama: <strong>{transaction.customer.data.name}</strong>
+                </div>
+                <div>
+                  Nomor HP: <strong>{transaction.customer.data.id}</strong>
+                </div>
+                <div>
+                  Dokter:{" "}
+                  <strong>{get(transaction, "doctor.data.name", "-")}</strong>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Card small className="mb-4">
+              <CardHeader className="border-bottom">
+                <Row>
+                  <Col lg="2">
+                    <VAlign>
+                      <h6 className="m-0">Daftar Obat</h6>
+                    </VAlign>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody className=" pb-3">
+                <div className="p-0 pb-3">
+                  <table className="table mb-0">
+                    <thead className="bg-light">
+                      <tr>
+                        <th scope="col" className="border-0">
+                          ID
+                        </th>
+                        <th scope="col" className="border-0">
+                          Nama
+                        </th>
+                        <th scope="col" className="border-0">
+                          Golongan
+                        </th>
+                        <th scope="col" className="border-0">
+                          Sediaan
+                        </th>
+                        <th scope="col" className="border-0">
+                          Jumlah
+                        </th>
+                        <th scope="col" className="border-0">
+                          Instruksi
+                        </th>
+                        <th scope="col" className="border-0">
+                          Harga Satuan
+                        </th>
+                        <th scope="col" className="border-0">
+                          Subtotal
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transaction.medicines.data.map(med => (
+                        <tr key={med.id}>
+                          <td>{med.medicine.data.id}</td>
+                          <td>{med.medicine.data.name}</td>
+                          <td>{med.medicine.data.medsCategory.data.name}</td>
+                          <td>{med.medicine.data.medsType.data.name}</td>
+                          <td>{med.qty}</td>
+                          <td>{med.instruction}</td>
+                          <td>{med.medicine.data.price}</td>
+                          <td>
+                            {Number(med.qty) * Number(med.medicine.data.price)}
+                            .00
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: "100%",
+                    alignItems: "flex-end",
+                    flexDirection: "column",
+                    fontSize: 16
+                  }}
+                >
+                  <div>
+                    Subtotal: <strong>{transaction.subtotal}</strong>
+                  </div>
+                  <div>
+                    PPN: <strong>{transaction.tax}</strong>
+                  </div>
+                  <div>
+                    Total:{" "}
+                    <strong>
+                      {total}
+                      .00
+                    </strong>
+                  </div>
+                  <div>
+                    <FormInput
+                      id="fePayAmt"
+                      name="payAmt"
+                      placeholder="0"
+                      invalid={!!errors.payAmt}
+                      innerRef={register({
+                        required: "Wajib diisi",
+                        validate: value =>
+                          Number(value) >= total || "Harus lebih dari total"
+                      })}
+                    />
+                    <FormFeedback invalid={!!errors.payAmt}>
+                      {errors.payAmt && errors.payAmt.message}
+                    </FormFeedback>
+                  </div>
+                  <div>
+                    Kembalian:{" "}
+                    <strong>
+                      {Number(watchPayAmt) - total > 0
+                        ? Number(watchPayAmt) - total
+                        : 0}
+                    </strong>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </Form>
+    </AuthorizedView>
+  );
+};
+
+const Cashier = () => {
+  return (
+    <AuthorizedView permissionType="read-cashier" fallback={<AuthError />}>
       <Container fluid className="main-content-container px-4">
-        <Route exact path="/transaksi" component={TransactionList} />
-        <Route path="/transaksi/add" component={TransactionAdd} />
-        <Route
-          path="/transaksi/edit/:transactionId"
-          component={TransactionEdit}
-        />
+        <Route exact path="/kasir" component={TransactionList} />
+        {/* <Route path="/kasir/add" component={TransactionAdd} /> */}
+        <Route path="/kasir/:transactionId" component={TransactionDetail} />
       </Container>
     </AuthorizedView>
   );
 };
 
-export default Transaction;
+export default Cashier;

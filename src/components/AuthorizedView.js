@@ -36,7 +36,10 @@ const permissions = {
     "delete-procurement-medicine",
 
     "read-transaction",
-    "add-transaction"
+    "add-transaction",
+    "edit-transaction",
+
+    "read-cashier"
   ],
   KG: [
     "read-doctor",
@@ -62,9 +65,10 @@ const permissions = {
     "delete-procurement-medicine",
 
     "read-transaction",
-    "add-transaction"
+    "add-transaction",
+    "edit-transaction"
   ],
-  KAS: ["read-doctor", "read-supplier", "read-transaction"]
+  KAS: ["read-doctor", "read-supplier", "read-transaction", "read-cashier"]
 };
 
 const AuthorizedView = props => {
