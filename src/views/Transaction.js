@@ -8,6 +8,9 @@ import AuthError from "./AuthError";
 import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import UserContext from "contexts/UserContext";
+import ReactToPrint from "react-to-print";
+
+import ETicketPrint from "./prints/ETicketPrint";
 
 import { VAlign } from "styles/commons";
 import TransactionResource from "resources/transaction";
@@ -113,32 +116,38 @@ const ListActions = ({ transaction }) => {
   );
 };
 
+const EticketButton = props => {
+  const eticketPrintPageRef = React.useRef();
+
+  return (
+    <>
+      <ReactToPrint
+        trigger={() => (
+          <Button size="sm" type="button">
+            E-Ticket
+          </Button>
+        )}
+        content={() => eticketPrintPageRef.current}
+      />
+      <div style={{ display: "none" }}>
+        <ETicketPrint ref={eticketPrintPageRef} data={props.data} />
+      </div>
+    </>
+  );
+};
+
 const TransactionList = () => {
   const [query, setQuery] = React.useState("");
-  const history = useHistory();
 
   const [queryPaid, setQueryPaid] = React.useState("");
   const transactionList = useResource(TransactionResource.listShape(), {});
-  const transactionTaken = useFetcher(
-    TransactionResource.takeTransactionShape()
-  );
-  const invalidateTransactionList = useInvalidator(
-    TransactionResource.listShape(),
-    {}
-  );
+
   const onSearch = e => {
     setQuery(e.target.value);
   };
 
   const onSearchPaid = e => {
     setQueryPaid(e.target.value);
-  };
-
-  const onTaken = id => () => {
-    transactionTaken({}, { id });
-
-    invalidateTransactionList({});
-    history.push("/transaksi");
   };
 
   return (
@@ -310,20 +319,18 @@ const TransactionList = () => {
                         <React.Suspense>
                           <td className="d-flex justify-content-center">
                             <ListActions transaction={transaction} />
-                            {!transaction.taken && (
-                              <AuthorizedView permissionType="take-transaction">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  outline
-                                  theme="primary"
-                                  className="mr-2"
-                                  onClick={onTaken(transaction.id)}
-                                >
-                                  <i className="material-icons">done_outline</i>
-                                </Button>
-                              </AuthorizedView>
-                            )}
+
+                            <Link to={`/transaksi/detail/${transaction.id}`}>
+                              <Button
+                                type="submit"
+                                size="sm"
+                                outline
+                                theme="secondary"
+                                className="mr-2"
+                              >
+                                <i className="material-icons">visibility</i>
+                              </Button>
+                            </Link>
                           </td>
                         </React.Suspense>
                       </tr>
@@ -1136,12 +1143,199 @@ const TransactionEdit = props => {
   );
 };
 
+const TransactionDetail = props => {
+  const transaction = useResource(TransactionResource.detailShape(), {
+    id: props.match.params.transactionId
+  });
+  console.log(transaction);
+  const alreadyPaid = transaction.payAmt !== null;
+
+  const history = useHistory();
+
+  const payTransaction = useFetcher(TransactionResource.payTansactionShape());
+
+  const currentUser = React.useContext(UserContext);
+
+  const { handleSubmit, register, errors, watch } = useForm({
+    defaultValues: {
+      payAmt: alreadyPaid ? Number(transaction.payAmt) : 0
+    }
+  });
+  const watchPayAmt = watch("payAmt", 0);
+
+  const onSubmit = values => {
+    const fetchBody = {
+      payAmt: watchPayAmt
+    };
+
+    payTransaction(fetchBody, { id: transaction.id });
+    history.push(`/kasir/${transaction.id}`);
+  };
+
+  const transactionTaken = useFetcher(
+    TransactionResource.takeTransactionShape()
+  );
+  const invalidateTransactionList = useInvalidator(
+    TransactionResource.listShape(),
+    {}
+  );
+  const onTaken = id => () => {
+    transactionTaken({}, { id });
+
+    invalidateTransactionList({});
+    history.push(`/transaksi/detail/${transaction.id}`);
+  };
+
+  return (
+    <AuthorizedView permissionType="read-transaction" fallback={<AuthError />}>
+      <Form onSubmit={handleSubmit(onSubmit)}>
+        <Row noGutters className="page-header py-4">
+          <PageTitle
+            title="Transaksi"
+            subtitle="Tambah Transaksi"
+            className="text-sm-left"
+          />
+        </Row>
+        <Row>
+          <Col>
+            <Card small className="mb-4">
+              <CardHeader className="border-bottom">
+                <Row>
+                  <Col lg="2">
+                    <VAlign>
+                      <h6 className="m-0">Detail Transaksi</h6>
+                    </VAlign>
+                  </Col>
+                  {!alreadyPaid && (
+                    <Col lg={{ size: 3, offset: 7 }}>
+                      <Button block type="submit">
+                        Selesai
+                      </Button>
+                    </Col>
+                  )}
+                  {!transaction.taken && (
+                    <Col lg={{ size: 3, offset: 7 }}>
+                      <AuthorizedView permissionType="take-transaction">
+                        <Button
+                          block
+                          type="button"
+                          size="sm"
+                          outline
+                          theme="primary"
+                          className="mr-2"
+                          onClick={onTaken(transaction.id)}
+                        >
+                          Obat diterima
+                        </Button>
+                      </AuthorizedView>
+                    </Col>
+                  )}
+                </Row>
+              </CardHeader>
+              <CardBody className=" pb-3">
+                <div>
+                  Tanggal:{" "}
+                  <strong>
+                    {dayjs(transaction.date).format("DD MMMM YYYY")}
+                  </strong>
+                </div>
+                <div>
+                  Kode: <strong>{transaction.id}</strong>
+                </div>
+                <div>
+                  Nama: <strong>{transaction.customer.data.name}</strong>
+                </div>
+                <div>
+                  Nomor HP: <strong>{transaction.customer.data.id}</strong>
+                </div>
+                <div>
+                  Dokter:{" "}
+                  <strong>{get(transaction, "doctor.data.name", "-")}</strong>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Card small className="mb-4">
+              <CardHeader className="border-bottom">
+                <Row>
+                  <Col lg="2">
+                    <VAlign>
+                      <h6 className="m-0">Daftar Obat</h6>
+                    </VAlign>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody className=" pb-3">
+                <div className="p-0 pb-3">
+                  <table className="table mb-0">
+                    <thead className="bg-light">
+                      <tr>
+                        <th scope="col" className="border-0">
+                          ID
+                        </th>
+                        <th scope="col" className="border-0">
+                          Nama
+                        </th>
+                        <th scope="col" className="border-0">
+                          Golongan
+                        </th>
+                        <th scope="col" className="border-0">
+                          Sediaan
+                        </th>
+                        <th scope="col" className="border-0">
+                          Jumlah
+                        </th>
+                        <th scope="col" className="border-0">
+                          Instruksi
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transaction.medicines.data.map(med => (
+                        <tr key={med.id}>
+                          <td>{med.medicine.data.id}</td>
+                          <td>{med.medicine.data.name}</td>
+                          <td>{med.medicine.data.medsCategory.data.name}</td>
+                          <td>{med.medicine.data.medsType.data.name}</td>
+                          <td>{med.qty}</td>
+                          <td>{med.instruction}</td>
+                          <td>
+                            <EticketButton
+                              data={{
+                                transaction,
+                                medicine: med,
+                                user: currentUser
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </Form>
+    </AuthorizedView>
+  );
+};
+
 const Transaction = () => {
   return (
     <AuthorizedView permissionType="read-transaction" fallback={<AuthError />}>
       <Container fluid className="main-content-container px-4">
         <Route exact path="/transaksi" component={TransactionList} />
         <Route path="/transaksi/add" component={TransactionAdd} />
+        <Route
+          exact
+          path="/transaksi/detail/:transactionId"
+          component={TransactionDetail}
+        />
         <Route
           path="/transaksi/edit/:transactionId"
           component={TransactionEdit}
