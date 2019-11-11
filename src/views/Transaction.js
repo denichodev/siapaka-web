@@ -60,6 +60,7 @@ const QtyInput = styled(FormInput)`
 
 const ListActions = ({ transaction }) => {
   const del = useFetcher(TransactionResource.deleteShape());
+  const paid = transaction.payAmt !== null;
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const handleDelete = () => {
@@ -76,7 +77,7 @@ const ListActions = ({ transaction }) => {
     }
   };
 
-  if (!transaction) {
+  if (!transaction || paid) {
     return null;
   }
 
@@ -114,15 +115,30 @@ const ListActions = ({ transaction }) => {
 
 const TransactionList = () => {
   const [query, setQuery] = React.useState("");
+  const history = useHistory();
+
   const [queryPaid, setQueryPaid] = React.useState("");
   const transactionList = useResource(TransactionResource.listShape(), {});
-
+  const transactionTaken = useFetcher(
+    TransactionResource.takeTransactionShape()
+  );
+  const invalidateTransactionList = useInvalidator(
+    TransactionResource.listShape(),
+    {}
+  );
   const onSearch = e => {
     setQuery(e.target.value);
   };
 
   const onSearchPaid = e => {
     setQueryPaid(e.target.value);
+  };
+
+  const onTaken = id => () => {
+    transactionTaken({}, { id });
+
+    invalidateTransactionList({});
+    history.push("/transaksi");
   };
 
   return (
@@ -284,10 +300,30 @@ const TransactionList = () => {
                         <td>{transaction.customer.data.name}</td>
                         <td>{transaction.customer.data.id}</td>
                         <td>{get(transaction, "doctor.data.name", "-")}</td>
-                        <td>{transaction.payAmt ? "PAID" : "PENDING"}</td>
+                        <td>
+                          {transaction.payAmt
+                            ? transaction.taken
+                              ? "TAKEN"
+                              : "PAID"
+                            : "PENDING"}
+                        </td>
                         <React.Suspense>
                           <td className="d-flex justify-content-center">
                             <ListActions transaction={transaction} />
+                            {!transaction.taken && (
+                              <AuthorizedView permissionType="take-transaction">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  outline
+                                  theme="primary"
+                                  className="mr-2"
+                                  onClick={onTaken(transaction.id)}
+                                >
+                                  <i className="material-icons">done_outline</i>
+                                </Button>
+                              </AuthorizedView>
+                            )}
                           </td>
                         </React.Suspense>
                       </tr>
@@ -367,7 +403,15 @@ const TransactionAdd = props => {
   const history = useHistory();
   const [startDate, setStartDate] = React.useState(new Date());
 
-  const { handleSubmit, register, errors } = useForm();
+  const {
+    handleSubmit,
+    register,
+    errors,
+    watch,
+    setError,
+    clearError
+  } = useForm();
+  const watchDoctorId = watch("doctorId", "-");
   const invalidateTransactionList = useInvalidator(
     TransactionResource.listShape(),
     {}
@@ -385,6 +429,10 @@ const TransactionAdd = props => {
   const [medicines, setMedicines] = React.useState([]);
   const medicineList = useResource(MedicineResource.listShape(), {});
   const addMedicine = (med, qty) => {
+    if (qty > med.currStock) {
+      return;
+    }
+
     const medToAdd = {
       ...med,
       qty,
@@ -397,6 +445,19 @@ const TransactionAdd = props => {
   const currentUser = React.useContext(UserContext);
   const onSubmit = (values, e) => {
     const [subtotal, tax] = getSubtotalAndTax(medicines);
+
+    let anyPotentMeds = false;
+
+    medicines.forEach(med => {
+      if (med.medsCategory.data.id === "POTENT") {
+        anyPotentMeds = true;
+      }
+    });
+
+    if (anyPotentMeds && watchDoctorId === "-") {
+      setError("doctorId", "notMatch", "Obat keras harus memiliki dokter");
+      return;
+    }
 
     const fetchBody = {
       ...values,
@@ -412,7 +473,12 @@ const TransactionAdd = props => {
       }))
     };
 
-    console.log(fetchBody);
+    if (fetchBody.medicines.length <= 0) {
+      return;
+    }
+
+    // console.log(fetchBody);
+    // console.log(medicines);
     createTransaction(fetchBody, {});
     invalidateTransactionList({});
 
@@ -511,6 +577,31 @@ const TransactionAdd = props => {
                         <FormSelect
                           id="feDoctorId"
                           name="doctorId"
+                          invalid={!!errors.doctorId}
+                          onChange={e => {
+                            let anyPotentMeds = false;
+
+                            medicines.forEach(med => {
+                              if (med.medsCategory.data.id === "POTENT") {
+                                anyPotentMeds = true;
+                              }
+                            });
+
+                            if (
+                              !anyPotentMeds ||
+                              (anyPotentMeds && e.target.value !== "-")
+                            ) {
+                              clearError("doctorId");
+                            }
+
+                            if (anyPotentMeds && watchDoctorId === "-") {
+                              setError(
+                                "doctorId",
+                                "notMatch",
+                                "Obat keras harus memiliki dokter"
+                              );
+                            }
+                          }}
                           innerRef={register({
                             required: "Wajib dipilih"
                           })}

@@ -6,6 +6,11 @@ import useForm from "react-hook-form";
 import styled from "styled-components";
 import AuthError from "./AuthError";
 import dayjs from "dayjs";
+import ReactToPrint from "react-to-print";
+
+import BillPrint from "./prints/BillPrint";
+import BPOPrint from "./prints/BPOPrint";
+
 import DatePicker from "react-datepicker";
 import UserContext from "contexts/UserContext";
 
@@ -331,317 +336,317 @@ const getSubtotalAndTax = medicines => {
   return [total, total * 0.1];
 };
 
-const TransactionAdd = props => {
-  const doctorList = useResource(DoctorResource.listShape(), {});
-  const createTransaction = useFetcher(TransactionResource.createShape());
-  const history = useHistory();
-  const [startDate, setStartDate] = React.useState(new Date());
+// const TransactionAdd = props => {
+//   const doctorList = useResource(DoctorResource.listShape(), {});
+//   const createTransaction = useFetcher(TransactionResource.createShape());
+//   const history = useHistory();
+//   const [startDate, setStartDate] = React.useState(new Date());
 
-  const { handleSubmit, register, errors } = useForm();
-  const invalidateTransactionList = useInvalidator(
-    TransactionResource.listShape(),
-    {}
-  );
+//   const { handleSubmit, register, errors } = useForm();
+//   const invalidateTransactionList = useInvalidator(
+//     TransactionResource.listShape(),
+//     {}
+//   );
 
-  // Adding meds
-  const [query, setQuery] = React.useState("");
-  const onSearch = e => {
-    setQuery(e.target.value);
-  };
-  const [instruction, setInstruction] = React.useState("");
-  const onSetInstruction = e => {
-    setInstruction(e.target.value);
-  };
-  const [medicines, setMedicines] = React.useState([]);
-  const medicineList = useResource(MedicineResource.listShape(), {});
-  const addMedicine = (med, qty) => {
-    const medToAdd = {
-      ...med,
-      qty,
-      instruction
-    };
-    setMedicines([...medicines.filter(m => m.id !== med.id), medToAdd]);
-    setInstruction("");
-  };
+//   // Adding meds
+//   const [query, setQuery] = React.useState("");
+//   const onSearch = e => {
+//     setQuery(e.target.value);
+//   };
+//   const [instruction, setInstruction] = React.useState("");
+//   const onSetInstruction = e => {
+//     setInstruction(e.target.value);
+//   };
+//   const [medicines, setMedicines] = React.useState([]);
+//   const medicineList = useResource(MedicineResource.listShape(), {});
+//   const addMedicine = (med, qty) => {
+//     const medToAdd = {
+//       ...med,
+//       qty,
+//       instruction
+//     };
+//     setMedicines([...medicines.filter(m => m.id !== med.id), medToAdd]);
+//     setInstruction("");
+//   };
 
-  const currentUser = React.useContext(UserContext);
-  const onSubmit = (values, e) => {
-    const [subtotal, tax] = getSubtotalAndTax(medicines);
+//   const currentUser = React.useContext(UserContext);
+//   const onSubmit = (values, e) => {
+//     const [subtotal, tax] = getSubtotalAndTax(medicines);
 
-    const fetchBody = {
-      ...values,
-      staffId: currentUser.me.id,
-      orderDate: dayjs(startDate).format("YYYY-MM-DD"),
-      doctorId: values.doctorId === "-" ? null : values.doctorId,
-      subtotal,
-      tax,
-      medicines: medicines.map(med => ({
-        id: med.id,
-        qty: med.qty,
-        instruction: med.instruction
-      }))
-    };
+//     const fetchBody = {
+//       ...values,
+//       staffId: currentUser.me.id,
+//       orderDate: dayjs(startDate).format("YYYY-MM-DD"),
+//       doctorId: values.doctorId === "-" ? null : values.doctorId,
+//       subtotal,
+//       tax,
+//       medicines: medicines.map(med => ({
+//         id: med.id,
+//         qty: med.qty,
+//         instruction: med.instruction
+//       }))
+//     };
 
-    console.log(fetchBody);
-    createTransaction(fetchBody, {});
-    invalidateTransactionList({});
+//     console.log(fetchBody);
+//     createTransaction(fetchBody, {});
+//     invalidateTransactionList({});
 
-    history.push("/transaksi");
-  };
+//     history.push("/transaksi");
+//   };
 
-  return (
-    <AuthorizedView permissionType="add-cashier" fallback={<AuthError />}>
-      <Row noGutters className="page-header py-4">
-        <PageTitle
-          title="Transaksi"
-          subtitle="Tambah Transaksi"
-          className="text-sm-left"
-        />
-      </Row>
-      <Row>
-        <Col>
-          <Card small className="mb-4">
-            <Form onSubmit={handleSubmit(onSubmit)}>
-              <CardHeader className="border-bottom">
-                <Row>
-                  <Col xs="6" sm="8" lg="9">
-                    <VAlign>
-                      <h6 className="m-0">Tambah Transaksi</h6>
-                    </VAlign>
-                  </Col>
-                  <Col lg="3">
-                    <Button block type="submit">
-                      Tambah Transaksi Baru
-                    </Button>
-                  </Col>
-                </Row>
-              </CardHeader>
-              <CardBody className="p-0 pb-3">
-                <ListGroup flush>
-                  <ListGroupItem className="p-3">
-                    <Row form>
-                      <Col md="6" className="form-group">
-                        <DatePickerWrapper className="d-flex flex-row justify-content-start align-items-start">
-                          <DatePicker
-                            id="date"
-                            placeholderText="Tanggal Pemesanan"
-                            selected={startDate}
-                            onChange={date => setStartDate(date)}
-                          />
-                        </DatePickerWrapper>
-                      </Col>
-                    </Row>
-                    <Row form>
-                      <Col md="6" className="form-group">
-                        <label htmlFor="feName">Nama</label>
-                        <FormInput
-                          id="feName"
-                          name="name"
-                          placeholder="Nama"
-                          invalid={!!errors.name}
-                          innerRef={register({
-                            required: "Wajib diisi",
-                            minLength: {
-                              value: 2,
-                              message: "Minimal 2 karakter"
-                            }
-                          })}
-                        />
-                        <FormFeedback invalid={!!errors.name}>
-                          {errors.name && errors.name.message}
-                        </FormFeedback>
-                      </Col>
-                      <Col md="6">
-                        <label htmlFor="fePhoneNo">No. Handphone</label>
-                        <FormInput
-                          name="phoneNo"
-                          id="fePhoneNo"
-                          placeholder="08123456789"
-                          invalid={!!errors.phoneNo}
-                          innerRef={register({
-                            required: "Wajib diisi",
-                            minLength: {
-                              value: 2,
-                              message: "Minimal 2 karakter"
-                            },
-                            pattern: {
-                              value: /^[0-9-]*$/,
-                              message: "Hanya angka dan karakter: -"
-                            }
-                          })}
-                        />
-                        <FormFeedback invalid={!!errors.phoneNo}>
-                          {errors.phoneNo && errors.phoneNo.message}
-                        </FormFeedback>
-                      </Col>
-                    </Row>
-                    <Row form>
-                      <Col md="6" className="form-group">
-                        <label htmlFor="feDoctorId">Dokter</label>
-                        <FormSelect
-                          id="feDoctorId"
-                          name="doctorId"
-                          innerRef={register({
-                            required: "Wajib dipilih"
-                          })}
-                        >
-                          <option value="-">Tanpa Dokter</option>
-                          {doctorList.map(doctor => (
-                            <option value={doctor.id} key={doctor.id}>
-                              {doctor.name}
-                            </option>
-                          ))}
-                        </FormSelect>
-                        <FormFeedback invalid={!!errors.doctorId}>
-                          {errors.doctorId && errors.doctorId.message}
-                        </FormFeedback>
-                      </Col>
-                    </Row>
+//   return (
+//     <AuthorizedView permissionType="add-cashier" fallback={<AuthError />}>
+//       <Row noGutters className="page-header py-4">
+//         <PageTitle
+//           title="Transaksi"
+//           subtitle="Tambah Transaksi"
+//           className="text-sm-left"
+//         />
+//       </Row>
+//       <Row>
+//         <Col>
+//           <Card small className="mb-4">
+//             <Form onSubmit={handleSubmit(onSubmit)}>
+//               <CardHeader className="border-bottom">
+//                 <Row>
+//                   <Col xs="6" sm="8" lg="9">
+//                     <VAlign>
+//                       <h6 className="m-0">Tambah Transaksi</h6>
+//                     </VAlign>
+//                   </Col>
+//                   <Col lg="3">
+//                     <Button block type="submit">
+//                       Tambah Transaksi Baru
+//                     </Button>
+//                   </Col>
+//                 </Row>
+//               </CardHeader>
+//               <CardBody className="p-0 pb-3">
+//                 <ListGroup flush>
+//                   <ListGroupItem className="p-3">
+//                     <Row form>
+//                       <Col md="6" className="form-group">
+//                         <DatePickerWrapper className="d-flex flex-row justify-content-start align-items-start">
+//                           <DatePicker
+//                             id="date"
+//                             placeholderText="Tanggal Pemesanan"
+//                             selected={startDate}
+//                             onChange={date => setStartDate(date)}
+//                           />
+//                         </DatePickerWrapper>
+//                       </Col>
+//                     </Row>
+//                     <Row form>
+//                       <Col md="6" className="form-group">
+//                         <label htmlFor="feName">Nama</label>
+//                         <FormInput
+//                           id="feName"
+//                           name="name"
+//                           placeholder="Nama"
+//                           invalid={!!errors.name}
+//                           innerRef={register({
+//                             required: "Wajib diisi",
+//                             minLength: {
+//                               value: 2,
+//                               message: "Minimal 2 karakter"
+//                             }
+//                           })}
+//                         />
+//                         <FormFeedback invalid={!!errors.name}>
+//                           {errors.name && errors.name.message}
+//                         </FormFeedback>
+//                       </Col>
+//                       <Col md="6">
+//                         <label htmlFor="fePhoneNo">No. Handphone</label>
+//                         <FormInput
+//                           name="phoneNo"
+//                           id="fePhoneNo"
+//                           placeholder="08123456789"
+//                           invalid={!!errors.phoneNo}
+//                           innerRef={register({
+//                             required: "Wajib diisi",
+//                             minLength: {
+//                               value: 2,
+//                               message: "Minimal 2 karakter"
+//                             },
+//                             pattern: {
+//                               value: /^[0-9-]*$/,
+//                               message: "Hanya angka dan karakter: -"
+//                             }
+//                           })}
+//                         />
+//                         <FormFeedback invalid={!!errors.phoneNo}>
+//                           {errors.phoneNo && errors.phoneNo.message}
+//                         </FormFeedback>
+//                       </Col>
+//                     </Row>
+//                     <Row form>
+//                       <Col md="6" className="form-group">
+//                         <label htmlFor="feDoctorId">Dokter</label>
+//                         <FormSelect
+//                           id="feDoctorId"
+//                           name="doctorId"
+//                           innerRef={register({
+//                             required: "Wajib dipilih"
+//                           })}
+//                         >
+//                           <option value="-">Tanpa Dokter</option>
+//                           {doctorList.map(doctor => (
+//                             <option value={doctor.id} key={doctor.id}>
+//                               {doctor.name}
+//                             </option>
+//                           ))}
+//                         </FormSelect>
+//                         <FormFeedback invalid={!!errors.doctorId}>
+//                           {errors.doctorId && errors.doctorId.message}
+//                         </FormFeedback>
+//                       </Col>
+//                     </Row>
 
-                    {/* Add Meds */}
-                    <div className="p-0 pb-4">
-                      <label htmlFor="feSupplierId">Obat:</label>
+//                     {/* Add Meds */}
+//                     <div className="p-0 pb-4">
+//                       <label htmlFor="feSupplierId">Obat:</label>
 
-                      <table className="table mb-0">
-                        <thead className="bg-light">
-                          <tr>
-                            <th scope="col" className="border-0">
-                              ID
-                            </th>
-                            <th scope="col" className="border-0">
-                              Nama
-                            </th>
-                            <th scope="col" className="border-0">
-                              Harga
-                            </th>
-                            <th scope="col" className="border-0">
-                              Golongan
-                            </th>
-                            <th scope="col" className="border-0">
-                              Jml. Beli
-                            </th>
-                            <th scope="col" className="border-0">
-                              Satuan
-                            </th>
-                            <th scope="col" className="border-0">
-                              Instruksi
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {medicines.map((med, index) => (
-                            <tr key={med.id}>
-                              <td>{med.id}</td>
-                              <td>{med.name}</td>
-                              <td>{med.price}</td>
-                              <td>{med.medsCategory.data.name}</td>
-                              <td>{med.qty}</td>
-                              <td>{med.medsType.data.name}</td>
-                              <td>{med.instruction}</td>
-                              <td className="d-flex justify-content-center">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  outline
-                                  theme="danger"
-                                  onClick={() =>
-                                    setMedicines(
-                                      medicines.filter(m => m.id !== med.id)
-                                    )
-                                  }
-                                >
-                                  <i className="material-icons">delete</i>
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </ListGroupItem>
-                </ListGroup>
-              </CardBody>
-            </Form>
-          </Card>
-          <Card small className="mb-4">
-            <CardHeader className="border-bottom">
-              <Row>
-                <Col xs="4" sm="4" lg="2">
-                  <VAlign>
-                    <h6 className="m-0">Daftar Obat</h6>
-                  </VAlign>
-                </Col>
-                <Col lg={{ size: 2 }}>
-                  <VAlign>
-                    <FormInput
-                      id="feQuery"
-                      name="query"
-                      placeholder="Cari"
-                      onChange={onSearch}
-                      value={query}
-                    />
-                  </VAlign>
-                </Col>
-                <Col lg={{ size: 4, offset: 4 }}>
-                  <VAlign>
-                    <FormInput
-                      id="feInstruction"
-                      name="instruction"
-                      placeholder="Instruksi"
-                      onChange={onSetInstruction}
-                      value={instruction}
-                    />
-                  </VAlign>
-                </Col>
-              </Row>
-            </CardHeader>
-            <CardBody className="p-0 pb-3">
-              <div className="p-0 pb-3">
-                <table className="table mb-0">
-                  <thead className="bg-light">
-                    <tr>
-                      <th scope="col" className="border-0">
-                        ID
-                      </th>
-                      <th scope="col" className="border-0">
-                        Nama
-                      </th>
-                      <th scope="col" className="border-0">
-                        Harga
-                      </th>
-                      <th scope="col" className="border-0">
-                        Jenis Obat
-                      </th>
-                      <th scope="col" className="border-0">
-                        Pabrik
-                      </th>
-                      <th scope="col" className="border-0">
-                        Stok
-                      </th>
-                      <th scope="col" className="border-0">
-                        Satuan
-                      </th>
-                      <th scope="col" className="border-0">
-                        Min. Stok
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {medicineList
-                      .filter(med => med.name.toLowerCase().includes(query))
-                      .map(medicine => (
-                        <MinMedRow medicine={medicine} onAdd={addMedicine} />
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </Card>
-        </Col>
-      </Row>
-    </AuthorizedView>
-  );
-};
+//                       <table className="table mb-0">
+//                         <thead className="bg-light">
+//                           <tr>
+//                             <th scope="col" className="border-0">
+//                               ID
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Nama
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Harga
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Golongan
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Jml. Beli
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Satuan
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Instruksi
+//                             </th>
+//                           </tr>
+//                         </thead>
+//                         <tbody>
+//                           {medicines.map((med, index) => (
+//                             <tr key={med.id}>
+//                               <td>{med.id}</td>
+//                               <td>{med.name}</td>
+//                               <td>{med.price}</td>
+//                               <td>{med.medsCategory.data.name}</td>
+//                               <td>{med.qty}</td>
+//                               <td>{med.medsType.data.name}</td>
+//                               <td>{med.instruction}</td>
+//                               <td className="d-flex justify-content-center">
+//                                 <Button
+//                                   type="button"
+//                                   size="sm"
+//                                   outline
+//                                   theme="danger"
+//                                   onClick={() =>
+//                                     setMedicines(
+//                                       medicines.filter(m => m.id !== med.id)
+//                                     )
+//                                   }
+//                                 >
+//                                   <i className="material-icons">delete</i>
+//                                 </Button>
+//                               </td>
+//                             </tr>
+//                           ))}
+//                         </tbody>
+//                       </table>
+//                     </div>
+//                   </ListGroupItem>
+//                 </ListGroup>
+//               </CardBody>
+//             </Form>
+//           </Card>
+//           <Card small className="mb-4">
+//             <CardHeader className="border-bottom">
+//               <Row>
+//                 <Col xs="4" sm="4" lg="2">
+//                   <VAlign>
+//                     <h6 className="m-0">Daftar Obat</h6>
+//                   </VAlign>
+//                 </Col>
+//                 <Col lg={{ size: 2 }}>
+//                   <VAlign>
+//                     <FormInput
+//                       id="feQuery"
+//                       name="query"
+//                       placeholder="Cari"
+//                       onChange={onSearch}
+//                       value={query}
+//                     />
+//                   </VAlign>
+//                 </Col>
+//                 <Col lg={{ size: 4, offset: 4 }}>
+//                   <VAlign>
+//                     <FormInput
+//                       id="feInstruction"
+//                       name="instruction"
+//                       placeholder="Instruksi"
+//                       onChange={onSetInstruction}
+//                       value={instruction}
+//                     />
+//                   </VAlign>
+//                 </Col>
+//               </Row>
+//             </CardHeader>
+//             <CardBody className="p-0 pb-3">
+//               <div className="p-0 pb-3">
+//                 <table className="table mb-0">
+//                   <thead className="bg-light">
+//                     <tr>
+//                       <th scope="col" className="border-0">
+//                         ID
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Nama
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Harga
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Jenis Obat
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Pabrik
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Stok
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Satuan
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Min. Stok
+//                       </th>
+//                     </tr>
+//                   </thead>
+//                   <tbody>
+//                     {medicineList
+//                       .filter(med => med.name.toLowerCase().includes(query))
+//                       .map(medicine => (
+//                         <MinMedRow medicine={medicine} onAdd={addMedicine} />
+//                       ))}
+//                   </tbody>
+//                 </table>
+//               </div>
+//             </CardBody>
+//           </Card>
+//         </Col>
+//       </Row>
+//     </AuthorizedView>
+//   );
+// };
 
 const medicinesFromAPI = meds => {
   return meds.map(m => ({
@@ -695,337 +700,356 @@ const DeleteTransactionMedicineBtn = props => {
   );
 };
 
-const TransactionEdit = props => {
-  const transaction = useResource(TransactionResource.detailShape(), {
-    id: props.match.params.transactionId
-  });
-  const doctorList = useResource(DoctorResource.listShape(), {});
-  const updateTransaction = useFetcher(TransactionResource.updateShape());
+// const TransactionEdit = props => {
+//   const transaction = useResource(TransactionResource.detailShape(), {
+//     id: props.match.params.transactionId
+//   });
+//   const doctorList = useResource(DoctorResource.listShape(), {});
+//   const updateTransaction = useFetcher(TransactionResource.updateShape());
 
-  const history = useHistory();
-  const [startDate, setStartDate] = React.useState(new Date(transaction.date));
+//   const history = useHistory();
+//   const [startDate, setStartDate] = React.useState(new Date(transaction.date));
 
-  const invalidateTransactionList = useInvalidator(
-    TransactionResource.listShape(),
-    {}
-  );
+//   const invalidateTransactionList = useInvalidator(
+//     TransactionResource.listShape(),
+//     {}
+//   );
 
-  // Adding meds
-  const [query, setQuery] = React.useState("");
-  const onSearch = e => {
-    setQuery(e.target.value);
-  };
-  const [instruction, setInstruction] = React.useState("");
-  const onSetInstruction = e => {
-    setInstruction(e.target.value);
-  };
-  const [medicines, setMedicines] = React.useState(
-    medicinesFromAPI(transaction.medicines.data)
-  );
-  const medicineList = useResource(MedicineResource.listShape(), {});
-  const addMedicine = (med, qty) => {
-    const prevMeds = medicines.find(el => el.id === med.id);
-    const medToAdd = {
-      ...med,
-      qty,
-      instruction,
-      dbId: prevMeds ? prevMeds.dbId : undefined
-    };
-    setMedicines([...medicines.filter(m => m.id !== med.id), medToAdd]);
-    setInstruction("");
-  };
+//   // Adding meds
+//   const [query, setQuery] = React.useState("");
+//   const onSearch = e => {
+//     setQuery(e.target.value);
+//   };
+//   const [instruction, setInstruction] = React.useState("");
+//   const onSetInstruction = e => {
+//     setInstruction(e.target.value);
+//   };
+//   const [medicines, setMedicines] = React.useState(
+//     medicinesFromAPI(transaction.medicines.data)
+//   );
+//   const medicineList = useResource(MedicineResource.listShape(), {});
+//   const addMedicine = (med, qty) => {
+//     const prevMeds = medicines.find(el => el.id === med.id);
+//     const medToAdd = {
+//       ...med,
+//       qty,
+//       instruction,
+//       dbId: prevMeds ? prevMeds.dbId : undefined
+//     };
+//     setMedicines([...medicines.filter(m => m.id !== med.id), medToAdd]);
+//     setInstruction("");
+//   };
 
-  const { handleSubmit, register, errors } = useForm({
-    defaultValues: {
-      name: transaction.customer.data.name,
-      phoneNo: transaction.customer.data.id,
-      doctorId: transaction.doctor.data.id
-    }
-  });
+//   const { handleSubmit, register, errors } = useForm({
+//     defaultValues: {
+//       name: transaction.customer.data.name,
+//       phoneNo: transaction.customer.data.id,
+//       doctorId: transaction.doctor.data.id
+//     }
+//   });
 
-  const onSubmit = (values, e) => {
-    const [subtotal, tax] = getSubtotalAndTax(medicines);
+//   const onSubmit = (values, e) => {
+//     const [subtotal, tax] = getSubtotalAndTax(medicines);
 
-    const fetchBody = {
-      subtotal,
-      tax,
-      medicines: medicines.map(med => ({
-        id: med.id,
-        qty: med.qty,
-        instruction: med.instruction,
-        dbId: med.dbId ? med.dbId : null
-      }))
-    };
+//     const fetchBody = {
+//       subtotal,
+//       tax,
+//       medicines: medicines.map(med => ({
+//         id: med.id,
+//         qty: med.qty,
+//         instruction: med.instruction,
+//         dbId: med.dbId ? med.dbId : null
+//       }))
+//     };
 
-    console.log("fetchbody", fetchBody);
-    updateTransaction(fetchBody, { id: transaction.id });
-    invalidateTransactionList();
+//     console.log("fetchbody", fetchBody);
+//     updateTransaction(fetchBody, { id: transaction.id });
+//     invalidateTransactionList();
 
-    history.push("/transaksi");
-  };
+//     history.push("/transaksi");
+//   };
 
-  return (
-    <AuthorizedView permissionType="edit-cashier" fallback={<AuthError />}>
-      <Row noGutters className="page-header py-4">
-        <PageTitle
-          title="Transaksi"
-          subtitle="Ubah Transaksi"
-          className="text-sm-left"
-        />
-      </Row>
-      <Row>
-        <Col>
-          <Card small className="mb-4">
-            <Form onSubmit={handleSubmit(onSubmit)}>
-              <CardHeader className="border-bottom">
-                <Row>
-                  <Col xs="6" sm="8" lg="9">
-                    <VAlign>
-                      <h6 className="m-0">Ubah Transaksi: {transaction.id}</h6>
-                    </VAlign>
-                  </Col>
-                  <Col lg="3">
-                    <Button block type="submit">
-                      Ubah Transaksi
-                    </Button>
-                  </Col>
-                </Row>
-              </CardHeader>
-              <CardBody className="p-0 pb-3">
-                <ListGroup flush>
-                  <ListGroupItem className="p-3">
-                    <Row form>
-                      <Col md="6" className="form-group">
-                        <DatePickerWrapper className="d-flex flex-row justify-content-start align-items-start">
-                          <DatePicker
-                            disabled
-                            id="date"
-                            placeholderText="Tanggal Pemesanan"
-                            selected={startDate}
-                            onChange={date => setStartDate(date)}
-                          />
-                        </DatePickerWrapper>
-                      </Col>
-                    </Row>
-                    <Row form>
-                      <Col md="6" className="form-group">
-                        <label htmlFor="feName">Nama</label>
-                        <FormInput
-                          id="feName"
-                          name="name"
-                          placeholder="Nama"
-                          disabled
-                          invalid={!!errors.name}
-                          innerRef={register({
-                            required: "Wajib diisi",
-                            minLength: {
-                              value: 2,
-                              message: "Minimal 2 karakter"
-                            }
-                          })}
-                        />
-                        <FormFeedback invalid={!!errors.name}>
-                          {errors.name && errors.name.message}
-                        </FormFeedback>
-                      </Col>
-                      <Col md="6">
-                        <label htmlFor="fePhoneNo">No. Handphone</label>
-                        <FormInput
-                          name="phoneNo"
-                          id="fePhoneNo"
-                          disabled
-                          placeholder="08123456789"
-                          invalid={!!errors.phoneNo}
-                          innerRef={register({
-                            required: "Wajib diisi",
-                            minLength: {
-                              value: 2,
-                              message: "Minimal 2 karakter"
-                            },
-                            pattern: {
-                              value: /^[0-9-]*$/,
-                              message: "Hanya angka dan karakter: -"
-                            }
-                          })}
-                        />
-                        <FormFeedback invalid={!!errors.phoneNo}>
-                          {errors.phoneNo && errors.phoneNo.message}
-                        </FormFeedback>
-                      </Col>
-                    </Row>
-                    <Row form>
-                      <Col md="6" className="form-group">
-                        <label htmlFor="feDoctorId">Dokter</label>
-                        <FormSelect
-                          disabled
-                          id="feDoctorId"
-                          name="doctorId"
-                          innerRef={register({
-                            required: "Wajib dipilih"
-                          })}
-                        >
-                          <option value="-">Tanpa Dokter</option>
-                          {doctorList.map(doctor => (
-                            <option value={doctor.id} key={doctor.id}>
-                              {doctor.name}
-                            </option>
-                          ))}
-                        </FormSelect>
-                        <FormFeedback invalid={!!errors.doctorId}>
-                          {errors.doctorId && errors.doctorId.message}
-                        </FormFeedback>
-                      </Col>
-                    </Row>
+//   return (
+//     <AuthorizedView permissionType="edit-cashier" fallback={<AuthError />}>
+//       <Row noGutters className="page-header py-4">
+//         <PageTitle
+//           title="Transaksi"
+//           subtitle="Ubah Transaksi"
+//           className="text-sm-left"
+//         />
+//       </Row>
+//       <Row>
+//         <Col>
+//           <Card small className="mb-4">
+//             <Form onSubmit={handleSubmit(onSubmit)}>
+//               <CardHeader className="border-bottom">
+//                 <Row>
+//                   <Col xs="6" sm="8" lg="9">
+//                     <VAlign>
+//                       <h6 className="m-0">Ubah Transaksi: {transaction.id}</h6>
+//                     </VAlign>
+//                   </Col>
+//                   <Col lg="3">
+//                     <Button block type="submit">
+//                       Ubah Transaksi
+//                     </Button>
+//                   </Col>
+//                 </Row>
+//               </CardHeader>
+//               <CardBody className="p-0 pb-3">
+//                 <ListGroup flush>
+//                   <ListGroupItem className="p-3">
+//                     <Row form>
+//                       <Col md="6" className="form-group">
+//                         <DatePickerWrapper className="d-flex flex-row justify-content-start align-items-start">
+//                           <DatePicker
+//                             disabled
+//                             id="date"
+//                             placeholderText="Tanggal Pemesanan"
+//                             selected={startDate}
+//                             onChange={date => setStartDate(date)}
+//                           />
+//                         </DatePickerWrapper>
+//                       </Col>
+//                     </Row>
+//                     <Row form>
+//                       <Col md="6" className="form-group">
+//                         <label htmlFor="feName">Nama</label>
+//                         <FormInput
+//                           id="feName"
+//                           name="name"
+//                           placeholder="Nama"
+//                           disabled
+//                           invalid={!!errors.name}
+//                           innerRef={register({
+//                             required: "Wajib diisi",
+//                             minLength: {
+//                               value: 2,
+//                               message: "Minimal 2 karakter"
+//                             }
+//                           })}
+//                         />
+//                         <FormFeedback invalid={!!errors.name}>
+//                           {errors.name && errors.name.message}
+//                         </FormFeedback>
+//                       </Col>
+//                       <Col md="6">
+//                         <label htmlFor="fePhoneNo">No. Handphone</label>
+//                         <FormInput
+//                           name="phoneNo"
+//                           id="fePhoneNo"
+//                           disabled
+//                           placeholder="08123456789"
+//                           invalid={!!errors.phoneNo}
+//                           innerRef={register({
+//                             required: "Wajib diisi",
+//                             minLength: {
+//                               value: 2,
+//                               message: "Minimal 2 karakter"
+//                             },
+//                             pattern: {
+//                               value: /^[0-9-]*$/,
+//                               message: "Hanya angka dan karakter: -"
+//                             }
+//                           })}
+//                         />
+//                         <FormFeedback invalid={!!errors.phoneNo}>
+//                           {errors.phoneNo && errors.phoneNo.message}
+//                         </FormFeedback>
+//                       </Col>
+//                     </Row>
+//                     <Row form>
+//                       <Col md="6" className="form-group">
+//                         <label htmlFor="feDoctorId">Dokter</label>
+//                         <FormSelect
+//                           disabled
+//                           id="feDoctorId"
+//                           name="doctorId"
+//                           innerRef={register({
+//                             required: "Wajib dipilih"
+//                           })}
+//                         >
+//                           <option value="-">Tanpa Dokter</option>
+//                           {doctorList.map(doctor => (
+//                             <option value={doctor.id} key={doctor.id}>
+//                               {doctor.name}
+//                             </option>
+//                           ))}
+//                         </FormSelect>
+//                         <FormFeedback invalid={!!errors.doctorId}>
+//                           {errors.doctorId && errors.doctorId.message}
+//                         </FormFeedback>
+//                       </Col>
+//                     </Row>
 
-                    {/* Add Meds */}
-                    <div className="p-0 pb-4">
-                      <label htmlFor="feSupplierId">Obat:</label>
+//                     {/* Add Meds */}
+//                     <div className="p-0 pb-4">
+//                       <label htmlFor="feSupplierId">Obat:</label>
 
-                      <table className="table mb-0">
-                        <thead className="bg-light">
-                          <tr>
-                            <th scope="col" className="border-0">
-                              ID
-                            </th>
-                            <th scope="col" className="border-0">
-                              Nama
-                            </th>
-                            <th scope="col" className="border-0">
-                              Harga
-                            </th>
-                            <th scope="col" className="border-0">
-                              Golongan
-                            </th>
-                            <th scope="col" className="border-0">
-                              Jml. Beli
-                            </th>
-                            <th scope="col" className="border-0">
-                              Satuan
-                            </th>
-                            <th scope="col" className="border-0">
-                              Instruksi
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {medicines.map((med, index) => (
-                            <tr key={med.id}>
-                              <td>{med.id}</td>
-                              <td>{med.name}</td>
-                              <td>{med.price}</td>
-                              <td>{med.medsCategory.data.name}</td>
-                              <td>{med.qty}</td>
-                              <td>{med.medsType.data.name}</td>
-                              <td>{med.instruction}</td>
-                              <DeleteTransactionMedicineBtn
-                                id={med.dbId}
-                                onDelete={id =>
-                                  setMedicines(
-                                    medicines.filter(m => m.dbId !== id)
-                                  )
-                                }
-                              />
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </ListGroupItem>
-                </ListGroup>
-              </CardBody>
-            </Form>
-          </Card>
-          <Card small className="mb-4">
-            <CardHeader className="border-bottom">
-              <Row>
-                <Col xs="4" sm="4" lg="2">
-                  <VAlign>
-                    <h6 className="m-0">Daftar Obat</h6>
-                  </VAlign>
-                </Col>
-                <Col lg={{ size: 2 }}>
-                  <VAlign>
-                    <FormInput
-                      id="feQuery"
-                      name="query"
-                      placeholder="Cari"
-                      onChange={onSearch}
-                      value={query}
-                    />
-                  </VAlign>
-                </Col>
-                <Col lg={{ size: 4, offset: 4 }}>
-                  <VAlign>
-                    <FormInput
-                      id="feInstruction"
-                      name="instruction"
-                      placeholder="Instruksi"
-                      onChange={onSetInstruction}
-                      value={instruction}
-                    />
-                  </VAlign>
-                </Col>
-              </Row>
-            </CardHeader>
-            <CardBody className="p-0 pb-3">
-              <div className="p-0 pb-3">
-                <table className="table mb-0">
-                  <thead className="bg-light">
-                    <tr>
-                      <th scope="col" className="border-0">
-                        ID
-                      </th>
-                      <th scope="col" className="border-0">
-                        Nama
-                      </th>
-                      <th scope="col" className="border-0">
-                        Harga
-                      </th>
-                      <th scope="col" className="border-0">
-                        Jenis Obat
-                      </th>
-                      <th scope="col" className="border-0">
-                        Pabrik
-                      </th>
-                      <th scope="col" className="border-0">
-                        Stok
-                      </th>
-                      <th scope="col" className="border-0">
-                        Satuan
-                      </th>
-                      <th scope="col" className="border-0">
-                        Min. Stok
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {medicineList
-                      .filter(med => med.name.toLowerCase().includes(query))
-                      .map(medicine => (
-                        <MinMedRow medicine={medicine} onAdd={addMedicine} />
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </Card>
-        </Col>
-      </Row>
-    </AuthorizedView>
-  );
-};
+//                       <table className="table mb-0">
+//                         <thead className="bg-light">
+//                           <tr>
+//                             <th scope="col" className="border-0">
+//                               ID
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Nama
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Harga
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Golongan
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Jml. Beli
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Satuan
+//                             </th>
+//                             <th scope="col" className="border-0">
+//                               Instruksi
+//                             </th>
+//                           </tr>
+//                         </thead>
+//                         <tbody>
+//                           {medicines.map((med, index) => (
+//                             <tr key={med.id}>
+//                               <td>{med.id}</td>
+//                               <td>{med.name}</td>
+//                               <td>{med.price}</td>
+//                               <td>{med.medsCategory.data.name}</td>
+//                               <td>{med.qty}</td>
+//                               <td>{med.medsType.data.name}</td>
+//                               <td>{med.instruction}</td>
+//                               <DeleteTransactionMedicineBtn
+//                                 id={med.dbId}
+//                                 onDelete={id =>
+//                                   setMedicines(
+//                                     medicines.filter(m => m.dbId !== id)
+//                                   )
+//                                 }
+//                               />
+//                             </tr>
+//                           ))}
+//                         </tbody>
+//                       </table>
+//                     </div>
+//                   </ListGroupItem>
+//                 </ListGroup>
+//               </CardBody>
+//             </Form>
+//           </Card>
+//           <Card small className="mb-4">
+//             <CardHeader className="border-bottom">
+//               <Row>
+//                 <Col xs="4" sm="4" lg="2">
+//                   <VAlign>
+//                     <h6 className="m-0">Daftar Obat</h6>
+//                   </VAlign>
+//                 </Col>
+//                 <Col lg={{ size: 2 }}>
+//                   <VAlign>
+//                     <FormInput
+//                       id="feQuery"
+//                       name="query"
+//                       placeholder="Cari"
+//                       onChange={onSearch}
+//                       value={query}
+//                     />
+//                   </VAlign>
+//                 </Col>
+//                 <Col lg={{ size: 4, offset: 4 }}>
+//                   <VAlign>
+//                     <FormInput
+//                       id="feInstruction"
+//                       name="instruction"
+//                       placeholder="Instruksi"
+//                       onChange={onSetInstruction}
+//                       value={instruction}
+//                     />
+//                   </VAlign>
+//                 </Col>
+//               </Row>
+//             </CardHeader>
+//             <CardBody className="p-0 pb-3">
+//               <div className="p-0 pb-3">
+//                 <table className="table mb-0">
+//                   <thead className="bg-light">
+//                     <tr>
+//                       <th scope="col" className="border-0">
+//                         ID
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Nama
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Harga
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Jenis Obat
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Pabrik
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Stok
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Satuan
+//                       </th>
+//                       <th scope="col" className="border-0">
+//                         Min. Stok
+//                       </th>
+//                     </tr>
+//                   </thead>
+//                   <tbody>
+//                     {medicineList
+//                       .filter(med => med.name.toLowerCase().includes(query))
+//                       .map(medicine => (
+//                         <MinMedRow medicine={medicine} onAdd={addMedicine} />
+//                       ))}
+//                   </tbody>
+//                 </table>
+//               </div>
+//             </CardBody>
+//           </Card>
+//         </Col>
+//       </Row>
+//     </AuthorizedView>
+//   );
+// };
 
 const TransactionDetail = props => {
   const transaction = useResource(TransactionResource.detailShape(), {
     id: props.match.params.transactionId
   });
+  console.log(transaction);
+  const alreadyPaid = transaction.payAmt !== null;
 
-  const { handleSubmit, register, errors, watch } = useForm();
+  const history = useHistory();
+
+  const payTransaction = useFetcher(TransactionResource.payTansactionShape());
+
+  const currentUser = React.useContext(UserContext);
+
+  const { handleSubmit, register, errors, watch } = useForm({
+    defaultValues: {
+      payAmt: alreadyPaid ? Number(transaction.payAmt) : 0
+    }
+  });
   const watchPayAmt = watch("payAmt", 0);
   const total = Number(transaction.tax) + Number(transaction.subtotal);
+  const billPrintPageRef = React.useRef();
+  const BPOPrintPageRef = React.useRef();
 
   const onSubmit = values => {
-    console.log("valuess");
+    const fetchBody = {
+      payAmt: watchPayAmt
+    };
+
+    payTransaction(fetchBody, { id: transaction.id });
+    history.push(`/kasir/${transaction.id}`);
   };
 
   return (
@@ -1048,9 +1072,13 @@ const TransactionDetail = props => {
                       <h6 className="m-0">Detail Transaksi</h6>
                     </VAlign>
                   </Col>
-                  <Col lg="3">
-                    <Button type="submit">Tambah Transaksi Baru</Button>
-                  </Col>
+                  {!alreadyPaid && (
+                    <Col lg={{ size: 3, offset: 7 }}>
+                      <Button block type="submit">
+                        Selesai
+                      </Button>
+                    </Col>
+                  )}
                 </Row>
               </CardHeader>
               <CardBody className=" pb-3">
@@ -1165,6 +1193,7 @@ const TransactionDetail = props => {
                     <FormInput
                       id="fePayAmt"
                       name="payAmt"
+                      disabled={alreadyPaid}
                       placeholder="0"
                       invalid={!!errors.payAmt}
                       innerRef={register({
@@ -1180,12 +1209,49 @@ const TransactionDetail = props => {
                   <div>
                     Kembalian:{" "}
                     <strong>
-                      {Number(watchPayAmt) - total > 0
-                        ? Number(watchPayAmt) - total
-                        : 0}
+                      {!alreadyPaid &&
+                        (Number(watchPayAmt) - total > 0
+                          ? Number(watchPayAmt) - total
+                          : 0)}
+                      {alreadyPaid && Number(transaction.payAmt) - total}
                     </strong>
                   </div>
                 </div>
+
+                <Row className="d-flex justify-content-end mt-3 mr-1">
+                  <ReactToPrint
+                    trigger={() => (
+                      <div className="mr-3">
+                        <Button type="button">Cetak BPO</Button>
+                      </div>
+                    )}
+                    content={() => BPOPrintPageRef.current}
+                  />
+
+                  <ReactToPrint
+                    trigger={() => <Button type="button">Cetak Nota</Button>}
+                    content={() => billPrintPageRef.current}
+                  />
+
+                  <div style={{ display: "none" }}>
+                    <BillPrint
+                      ref={billPrintPageRef}
+                      data={{
+                        transaction,
+                        payAmt: alreadyPaid ? transaction.payAmt : watchPayAmt,
+                        user: currentUser.me
+                      }}
+                    />
+                    <BPOPrint
+                      ref={BPOPrintPageRef}
+                      data={{
+                        transaction,
+                        payAmt: alreadyPaid ? transaction.payAmt : watchPayAmt,
+                        user: currentUser.me
+                      }}
+                    />
+                  </div>
+                </Row>
               </CardBody>
             </Card>
           </Col>

@@ -38,6 +38,7 @@ const permissions = {
     "read-transaction",
     "add-transaction",
     "edit-transaction",
+    "take-transaction",
 
     "read-cashier"
   ],
@@ -66,7 +67,8 @@ const permissions = {
 
     "read-transaction",
     "add-transaction",
-    "edit-transaction"
+    "edit-transaction",
+    "take-transaction"
   ],
   KAS: ["read-doctor", "read-supplier", "read-transaction", "read-cashier"]
 };
