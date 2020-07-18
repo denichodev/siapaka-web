@@ -9,7 +9,7 @@
     "chart.js": "^2.8.0",
     "classnames": "^2.2.6",
     "dayjs": "^1.8.16",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "lodash-es": "^4.17.15",
     "react": "^16.9.0",
     "react-cookie": "^4.0.1",
